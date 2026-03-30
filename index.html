@@ -322,6 +322,95 @@ select.form-input{cursor:pointer}
 /* Più (aggiungi) */
 .ico-aggiungi::before{content:"✚";font-size:1em;color:#fff}
 
+
+/* ════════════════════════════════════════════════════════
+   ICONE RETRO ANNI '80 – CP437 / DOS / Arcade
+   Font monospace per rendering pixel-perfect
+════════════════════════════════════════════════════════ */
+th .r80, td .r80,
+.card-data, .r80 {
+  font-family: 'Courier New', 'Lucida Console', monospace;
+  letter-spacing: .05em;
+}
+th {
+  font-family: 'Courier New', 'Lucida Console', monospace;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-size: .62rem !important;
+  color: var(--accent) !important;
+}
+.card-data {
+  font-family: 'Courier New', monospace;
+  font-size: .71rem;
+  color: var(--soft2);
+  letter-spacing: .04em;
+}
+.card-luogo {
+  font-family: 'Courier New', monospace;
+  font-size: .73rem;
+}
+.detail-row .dk {
+  font-family: 'Courier New', monospace;
+  font-size: .73rem;
+  letter-spacing: .04em;
+}
+
+
+/* ════════════════════════════════════════════════════════
+   PANNELLO RICERCA EVENTI LOCALI
+════════════════════════════════════════════════════════ */
+#pannelloLocale{
+  background:linear-gradient(135deg,#fef8e0,#fef0c7);
+  border:2px solid var(--hdrbord);
+  border-radius:0;
+  padding:10px 14px;
+  display:none;
+}
+#pannelloLocale.show{display:block}
+.locale-titolo{font-family:'Courier New',monospace;font-weight:700;
+  color:var(--hdr);font-size:.78rem;letter-spacing:.12em;
+  text-transform:uppercase;margin-bottom:4px}
+.locale-sub{font-size:.7rem;color:var(--mid);margin-bottom:10px;line-height:1.5}
+.locale-città{font-weight:700;color:var(--accent)}
+
+/* Griglia fonti */
+.fonti-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px;margin-bottom:10px}
+.fonte-btn{display:flex;flex-direction:column;align-items:flex-start;
+  gap:2px;padding:8px 10px;border-radius:9px;border:1.5px solid var(--borderacc);
+  background:var(--card);cursor:pointer;text-align:left;
+  text-decoration:none;transition:background .15s,border-color .15s;
+  font-family:inherit}
+.fonte-btn:hover{background:var(--accent);border-color:var(--accent)}
+.fonte-btn:hover .fonte-nome{color:#fff}
+.fonte-btn:hover .fonte-desc{color:rgba(255,255,255,.8)}
+.fonte-nome{font-size:.74rem;font-weight:700;color:var(--hdr);
+  font-family:'Courier New',monospace;letter-spacing:.04em}
+.fonte-desc{font-size:.62rem;color:var(--soft);line-height:1.3}
+.fonte-tag{display:inline-block;background:var(--bgalt);border-radius:4px;
+  padding:0 5px;font-size:.58rem;color:var(--mid);margin-top:3px;
+  font-family:'Courier New',monospace}
+.fonte-tag.tag-locale{background:#fff0cc;color:#7a4a00}
+.fonte-tag.tag-comune{background:#e0f0ff;color:#1a3a6a}
+.fonte-tag.tag-arci{background:#ffe0e0;color:#7a1a1a}
+.fonte-tag.tag-sagre{background:#e0ffe0;color:#1a6a1a}
+
+/* Nota sotto */
+.locale-nota{font-size:.67rem;color:var(--faint);border-top:1px solid var(--borderacc);
+  padding-top:8px;line-height:1.6}
+.locale-nota strong{color:var(--mid)}
+
+/* Pulsante apri pannello */
+#btnLocale{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:18px;
+  border:2px solid var(--accent);background:var(--hdrbg);
+  color:var(--accent);font-size:.75rem;font-family:'Courier New',monospace;
+  font-weight:700;cursor:pointer;white-space:nowrap;letter-spacing:.06em;
+  transition:background .2s,color .2s;
+}
+#btnLocale.aperto{background:var(--accent);color:#fff}
+#btnLocale:hover{background:var(--accent);color:#fff}
+
 @media(max-width:580px){
   .hdr-actions{gap:5px}
   .hdr-pill{font-size:.68rem;padding:4px 10px}
@@ -452,8 +541,46 @@ select.form-input{cursor:pointer}
 <!-- MOTORI RICERCA -->
 <div id="motoriBarra">
   <strong>🔍 Cerca altri eventi:</strong>
-  <a class="motore-link" id="linkTrovaEventi" href="https://trovaeventi.com/eventi/" target="_blank" rel="noopener noreferrer">📅 TrovaEventi</a>
-  <a class="motore-link" id="linkPlannify"    href="https://plannify.it/" target="_blank" rel="noopener noreferrer">🗓 Plannify</a>
+  <a class="motore-link" id="linkTrovaEventi" href="https://trovaeventi.com/eventi/" target="_blank" rel="noopener noreferrer">◙ TrovaEventi</a>
+  <a class="motore-link" id="linkPlannify"    href="https://plannify.it/" target="_blank" rel="noopener noreferrer">◙ Plannify</a>
+  <button id="btnLocale" onclick="togglePannelloLocale()" title="Apre fonti per eventi locali, sagre, Pro Loco, ARCI">
+    ♦ Cerca vicino a me
+  </button>
+</div>
+
+<!-- PANNELLO EVENTI LOCALI -->
+<div id="pannelloLocale">
+  <div class="locale-titolo">♦ EVENTI LOCALI — entro 20 km</div>
+  <div class="locale-sub">
+    Fonti specializzate per sagre, mercatini, Pro Loco, circoli, feste di quartiere.
+    Città selezionata: <span class="locale-città" id="localeCity">—</span>
+  </div>
+
+  <!-- GRUPPO 1: Portali regionali e territoriali -->
+  <div style="font-size:.64rem;font-family:'Courier New',monospace;color:var(--soft);
+              letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">
+    ► Portali territoriali
+  </div>
+  <div class="fonti-grid" id="fontiGrid">
+    <!-- Popolato dinamicamente da JS in base alla città -->
+  </div>
+
+  <!-- GRUPPO 2: Fonti sempre disponibili (non dipendono dalla città) -->
+  <div style="font-size:.64rem;font-family:'Courier New',monospace;color:var(--soft);
+              letter-spacing:.1em;text-transform:uppercase;margin:8px 0 6px">
+    ► Fonti nazionali per eventi locali
+  </div>
+  <div class="fonti-grid" id="fontiNazionali">
+    <!-- Popolato da JS -->
+  </div>
+
+  <div class="locale-nota">
+    <strong>Perché qui e non nell'app?</strong>
+    Sagre di paese, eventi Arci, feste di quartiere e Pro Loco non appaiono su nessun motore generalista —
+    vivono su bacheche fisiche, Facebook e siti comunali.
+    Questi link aprono direttamente le fonti più affidabili già filtrate per la tua città.
+    Quello che trovi puoi <strong>aggiungerlo manualmente</strong> con ➕ Aggiungi evento.
+  </div>
 </div>
 
 <!-- FILTRI STICKY -->
@@ -472,10 +599,10 @@ select.form-input{cursor:pointer}
       <button class="cat-btn" data-cat="Natura">Natura</button>
       <button class="cat-btn" data-cat="Ludico">Ludico</button>
     </div>
-    <button id="apertoBtn">🌿 Aperto</button>
+    <button id="apertoBtn">♦ Aperto</button>
     <select id="sortSel">
-      <option value="distanza" selected>📏 Distanza</option>
-      <option value="costo">💰 Costo</option>
+      <option value="distanza" selected>↔ Distanza</option>
+      <option value="costo">£ Costo</option>
     </select>
     <div class="view-toggle">
       <button class="view-btn active" data-view="auto">🔄</button>
@@ -483,9 +610,9 @@ select.form-input{cursor:pointer}
       <button class="view-btn" data-view="table">🖥</button>
     </div>
     <div class="tempo-filtri" id="tempoFiltri">
-      <button class="tempo-btn" data-tempo="oggi">📅 Oggi</button>
-      <button class="tempo-btn" data-tempo="mese">📆 Entro 1 mese</button>
-      <button class="tempo-btn" data-tempo="oltre">🗓 Oltre 1 mese</button>
+      <button class="tempo-btn" data-tempo="oggi">◙ Oggi</button>
+      <button class="tempo-btn" data-tempo="mese">◙ Entro 1 mese</button>
+      <button class="tempo-btn" data-tempo="oltre">◘ Oltre 1 mese</button>
     </div>
     <button id="avviaBtn">🔍 Avvia ricerca</button>
     <button class="hdr-pill" style="background:#1a6a9a;color:#fff;border:none;cursor:pointer;font-family:inherit" onclick="apriOverlay('overlayAggiungi')">➕ Aggiungi evento</button>
@@ -498,7 +625,7 @@ select.form-input{cursor:pointer}
   <div id="evList"></div>
   <div id="legenda">
     <div class="leg-text">
-      <strong style="color:var(--mid)">Costi stimati:</strong> Diesel ~2,04 €/L (Lombardia, mar 2026). Pedaggi A4 Pavia–Verona ~8 € A/R. Esclusi parcheggio, pasti, alloggio.
+      <strong style="color:var(--mid)">£ Costi stimati:</strong> Diesel ~2,04 €/L (Lombardia, mar 2026). Pedaggi A4 Pavia–Verona ~8 € A/R. Esclusi parcheggio, pasti, alloggio.
       <a href="https://carburanti.mise.gov.it" target="_blank" rel="noopener noreferrer">Verifica prezzi ↗</a>
     </div>
     <div class="leg-badges">
@@ -525,13 +652,13 @@ select.form-input{cursor:pointer}
       </p>
 
       <div class="form-group">
-        <label>⛽ Prezzo carburante (€/litro)</label>
+        <label>▣ Prezzo carburante (€/litro)</label>
         <input class="form-input" id="imp_diesel" type="number" step="0.01" min="0.5" max="5" placeholder="2.04">
         <div class="form-hint">Diesel self Lombardia ~2,04 €/L (mar 2026). Verifica su <a href="https://carburanti.mise.gov.it" target="_blank" rel="noopener noreferrer" style="color:var(--link)">mise.gov.it ↗</a></div>
       </div>
 
       <div class="form-group">
-        <label>🚗 Consumo auto (km/litro)</label>
+        <label>◄► Consumo auto (km/litro)</label>
         <input class="form-input" id="imp_consumo" type="number" step="0.5" min="1" max="80" placeholder="25">
         <div class="form-hint">Media benzina ~14 km/L · Diesel ~18 km/L · Ibrida ~22 km/L · Elettrica: lascia 99</div>
       </div>
@@ -563,19 +690,19 @@ select.form-input{cursor:pointer}
       </p>
 
       <div class="form-group">
-        <label>📌 Nome evento *</label>
+        <label>◙ Nome evento *</label>
         <input class="form-input" id="ev_nome" type="text" placeholder="Es. Controautunno – Circolo Arci Pavia" maxlength="80">
         <div class="form-error" id="err_nome">Inserisci il nome dell'evento</div>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label>📍 Luogo *</label>
+          <label>► Luogo *</label>
           <input class="form-input" id="ev_luogo" type="text" placeholder="Es. Pavia, Viale Bligny 83" maxlength="60">
           <div class="form-error" id="err_luogo">Inserisci il luogo</div>
         </div>
         <div class="form-group">
-          <label>📏 Distanza (km)</label>
+          <label>↔ Distanza (km)</label>
           <input class="form-input" id="ev_km" type="number" placeholder="0" min="0" max="500" value="0">
           <div class="form-hint">0 = in loco</div>
         </div>
@@ -583,12 +710,12 @@ select.form-input{cursor:pointer}
 
       <div class="form-row">
         <div class="form-group">
-          <label>📅 Data inizio *</label>
+          <label>◙ Data inizio *</label>
           <input class="form-input" id="ev_dataInizio" type="date">
           <div class="form-error" id="err_data">Inserisci la data</div>
         </div>
         <div class="form-group">
-          <label>📅 Data fine</label>
+          <label>◙ Data fine</label>
           <input class="form-input" id="ev_dataFine" type="date">
           <div class="form-hint">Lascia vuoto se evento singolo</div>
         </div>
@@ -608,19 +735,19 @@ select.form-input{cursor:pointer}
           </select>
         </div>
         <div class="form-group">
-          <label>💰 Costo stimato (€)</label>
+          <label>£ Costo stimato (€)</label>
           <input class="form-input" id="ev_costo" type="number" placeholder="0" min="0" value="0">
           <div class="form-hint">0 = gratuito</div>
         </div>
       </div>
 
       <div class="form-group">
-        <label>📝 Descrizione breve</label>
+        <label>≡ Descrizione breve</label>
         <input class="form-input" id="ev_desc" type="text" placeholder="Es. Serata musicale, cena vegan, ingresso con tessera Arci" maxlength="140">
       </div>
 
       <div class="form-group">
-        <label>🔗 Link (opzionale)</label>
+        <label>► Link (opzionale)</label>
         <input class="form-input" id="ev_url" type="url" placeholder="https://… oppure lascia vuoto">
         <div class="form-hint">Pagina Facebook, sito, post Instagram…</div>
       </div>
@@ -858,12 +985,188 @@ function apriIndicazioni(mappa){
 
 // ── MOTORI ─────────────────────────────────────────────────────
 function aggiornaLinkMotori(){
-  const p=(document.getElementById('partenzaInput').value.trim()||'Pavia')+' aprile 2026';
-  const pe=encodeURIComponent(p);
-  const city=encodeURIComponent(document.getElementById('partenzaInput').value.trim()||'Pavia');
-  document.getElementById('linkTrovaEventi').href=`https://trovaeventi.com/cerca/?q=${pe}`;
-  document.getElementById('linkPlannify').href=`https://plannify.it/events?q=${pe}`;
+  const città = document.getElementById('partenzaInput').value.trim() || 'Pavia';
+  const p = città + ' aprile 2026';
+  const pe = encodeURIComponent(p);
+  document.getElementById('linkTrovaEventi').href = `https://trovaeventi.com/cerca/?q=${pe}`;
+  document.getElementById('linkPlannify').href = `https://plannify.it/events?q=${pe}`;
+  // Aggiorna anche il pannello locale se è aperto
+  const span = document.getElementById('localeCity');
+  if(span) span.textContent = città;
+  if(document.getElementById('pannelloLocale').classList.contains('show')){
+    popolaFontiLocali(città);
+  }
 }
+
+// ══════════════════════════════════════════════════════════════
+//  PANNELLO EVENTI LOCALI — fonti specializzate
+// ══════════════════════════════════════════════════════════════
+
+let pannelloAperto = false;
+
+function togglePannelloLocale(){
+  pannelloAperto = !pannelloAperto;
+  const p = document.getElementById('pannelloLocale');
+  const b = document.getElementById('btnLocale');
+  p.classList.toggle('show', pannelloAperto);
+  b.classList.toggle('aperto', pannelloAperto);
+  if(pannelloAperto){
+    const città = document.getElementById('partenzaInput').value.trim() || 'Pavia';
+    document.getElementById('localeCity').textContent = città;
+    popolaFontiLocali(città);
+    setTimeout(()=>p.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+  }
+}
+
+// Rilevatore regione dalla città (euristico su 100+ comuni lombardi + vicini)
+function rilevaRegione(città){
+  const c = città.toLowerCase().trim();
+  const mappa = {
+    // Lombardia
+    lombardia: ['pavia','vigevano','voghera','mortara','abbiategrasso','lodi',
+      'cremona','mantova','brescia','bergamo','lecco','como','varese',
+      'monza','sesto','cologno','milan','milano','rho','magenta','legnano',
+      'busto','gallarate','castellanza','saronno','tradate','cantù',
+      'merate','desio','vimercate','carate','seregno','lissone',
+      'corsico','buccinasco','opera','segrate','pioltello','cernusco',
+      'paullo','melegnano','binasco','pieve','certosa','san donato',
+      'san giuliano','broni','stradella','mede','casalpusterlengo',
+      'crema','soncino','caravaggio','treviglio','romano','rivolta',
+      'codogno','casalmaggiore','soresina','oltrepò','varzi','casteggio'],
+    piemonte: ['torino','novara','alessandria','asti','cuneo','alba',
+      'bra','acqui','casale','vercelli','biella','verbania','domodossola',
+      'moncalieri','rivoli','collegno','settimo','chieri','pinerolo'],
+    veneto: ['venezia','verona','vicenza','padova','treviso','belluno',
+      'rovigo','legnago','este','montagnana','conselve','piove','camposampiero'],
+    emilia: ['bologna','parma','reggio','modena','ferrara','piacenza',
+      'ravenna','forlì','rimini','fidenza','salsomaggiore'],
+    liguria: ['genova','savona','imperia','la spezia','sanremo','albenga',
+      'chiavari','rapallo','sestri'],
+    toscana: ['firenze','lucca','pisa','siena','arezzo','grosseto','livorno',
+      'pistoia','prato','massa','carrara'],
+    trentino: ['trento','bolzano','rovereto','riva','arco','pergine'],
+  };
+  for(const [reg, città_list] of Object.entries(mappa)){
+    if(città_list.some(x => c.includes(x) || x.includes(c.split(' ')[0])))
+      return reg;
+  }
+  return 'italia'; // fallback nazionale
+}
+
+function makeLink(href, nome, desc, tag, tagClass){
+  return `<a class="fonte-btn" href="${href}" target="_blank" rel="noopener noreferrer">
+    <span class="fonte-nome">${nome}</span>
+    <span class="fonte-desc">${desc}</span>
+    <span class="fonte-tag ${tagClass}">${tag}</span>
+  </a>`;
+}
+
+function popolaFontiLocali(città){
+  const q  = encodeURIComponent(città);
+  const qs = encodeURIComponent(città + ' sagra 2026');
+  const qe = encodeURIComponent(città + ' evento aprile 2026');
+  const qp = encodeURIComponent(città + ' pro loco 2026');
+  const qa = encodeURIComponent(città + ' arci 2026');
+  const qm = encodeURIComponent(città + ' mercatino 2026');
+  const qf = encodeURIComponent(città + ' festa 2026');
+  const reg = rilevaRegione(città);
+
+  // ── Fonti territoriali (variano per regione) ───────────────
+  let fontiTerritoriali = [];
+
+  if(reg === 'lombardia'){
+    fontiTerritoriali = [
+      makeLink(`https://eventi.regione.lombardia.it/it/?search=${q}`,
+        '▣ REG. LOMBARDIA','Calendario ufficiale regionale','Regione','tag-comune'),
+      makeLink(`https://www.in-lombardia.it/it/sagre-e-feste?search=${q}`,
+        '♦ IN-LOMBARDIA','Sagre, feste e fiere lombarde','Sagre','tag-sagre'),
+      makeLink(`https://www.quatarobpavia.it/eventi-mercatini-sagre-pavia-provincia/`,
+        '► QUATAROB PAVIA','Sagre e mercatini pavesi','Pavia','tag-locale'),
+      makeLink(`https://www.visitlombardia.it/it/eventi?q=${q}`,
+        '◙ VISIT LOMBARDIA','Portale turistico ufficiale','Turismo','tag-comune'),
+      makeLink(`https://www.cheventi.it/regioni/lombardia/?s=${q}`,
+        '◄► CHEVENTI','Selezione eventi Lombardia','Weekend','tag-locale'),
+      makeLink(`https://www.arcipavia.it/calendar/`,
+        '♠ ARCI PAVIA','Calendario circoli Arci Pavia','Arci','tag-arci'),
+    ];
+  } else if(reg === 'piemonte'){
+    fontiTerritoriali = [
+      makeLink(`https://www.regione.piemonte.it/web/temi/cultura-turismo-sport/turismo/eventi-piemonte?q=${q}`,
+        '▣ REG. PIEMONTE','Calendario ufficiale regionale','Regione','tag-comune'),
+      makeLink(`https://www.sagre.it/regione/piemonte/?s=${q}`,
+        '♦ SAGRE.IT','Sagre e feste in Piemonte','Sagre','tag-sagre'),
+      makeLink(`https://www.visitpiemonte.com/it/eventi?q=${q}`,
+        '◙ VISIT PIEMONTE','Portale turistico ufficiale','Turismo','tag-comune'),
+    ];
+  } else if(reg === 'veneto'){
+    fontiTerritoriali = [
+      makeLink(`https://www.veneto.eu/it/veneto/eventi?q=${q}`,
+        '▣ REG. VENETO','Calendario ufficiale regionale','Regione','tag-comune'),
+      makeLink(`https://www.sagre.it/regione/veneto/?s=${q}`,
+        '♦ SAGRE.IT','Sagre e feste in Veneto','Sagre','tag-sagre'),
+      makeLink(`https://www.visitveneto.info/eventi?q=${q}`,
+        '◙ VISIT VENETO','Portale turistico','Turismo','tag-comune'),
+    ];
+  } else if(reg === 'emilia'){
+    fontiTerritoriali = [
+      makeLink(`https://www.emiliaromagnaturismo.it/it/eventi?q=${q}`,
+        '▣ ER TURISMO','Emilia Romagna Turismo','Regione','tag-comune'),
+      makeLink(`https://www.sagre.it/regione/emilia-romagna/?s=${q}`,
+        '♦ SAGRE.IT','Sagre e feste in Emilia','Sagre','tag-sagre'),
+    ];
+  } else if(reg === 'trentino'){
+    fontiTerritoriali = [
+      makeLink(`https://www.visittrentino.info/it/esperienze/eventi?q=${q}`,
+        '▣ VISIT TRENTINO','Portale ufficiale Trentino','Regione','tag-comune'),
+      makeLink(`https://www.altoadige.info/eventi?q=${q}`,
+        '◙ ALTO ADIGE INFO','Eventi Alto Adige','Turismo','tag-comune'),
+    ];
+  } else {
+    // Fallback: cerca su sagre.it e Google
+    fontiTerritoriali = [
+      makeLink(`https://www.sagre.it/cerca/?q=${q}`,
+        '♦ SAGRE.IT','Sagre e feste locali in Italia','Sagre','tag-sagre'),
+    ];
+  }
+
+  // Aggiungi sempre Google Maps + Ricerca Comune
+  fontiTerritoriali.push(
+    makeLink(`https://www.google.com/maps/search/eventi+${q}+oggi/@/data=!3m1!4b1`,
+      '◎ GOOGLE MAPS','Cerca eventi nei dintorni sulla mappa','Mappa','tag-locale'),
+    makeLink(`https://www.comune.${città.toLowerCase().replace(/\s+/g,'-')}.it/eventi`,
+      '► COMUNE','Sito istituzionale del comune','Comune','tag-comune'),
+    makeLink(`https://www.facebook.com/search/events/?q=${q}+eventi`,
+      '◙ FACEBOOK','Cerca eventi pubblici locali su Facebook','Social','tag-locale')
+  );
+
+  // ── Fonti nazionali sempre presenti ───────────────────────
+  const fontiNaz = [
+    makeLink(`https://www.sagre.it/cerca/?q=${qs.replace(/%20/g,'+')}`,
+      '♦ SAGRE.IT','La più completa per sagre italiane','Sagre','tag-sagre'),
+    makeLink(`https://www.proloco.it/cerca/?q=${q}`,
+      '► PRO LOCO IT','Portale nazionale Pro Loco','Pro Loco','tag-locale'),
+    makeLink(`https://www.comune-info.net/?s=${q}+eventi`,
+      '▣ COMUNI IT','Notizie dai comuni italiani','Comuni','tag-comune'),
+    makeLink(`https://www.ilvolo.info/eventi/?city=${q}`,
+      '◄► ILVOLO.INFO','Mercatini e feste locali','Mercatini','tag-sagre'),
+    makeLink(`https://portale.arci.it/events/?city=${q}`,
+      '♠ ARCI NAZIONALE','Circoli Arci in tutta Italia','Arci','tag-arci'),
+    makeLink(`https://www.weekendearte.it/cerca/?q=${qe}`,
+      '◙ WEEKEND ARTE','Arte e cultura il weekend','Cultura','tag-locale'),
+    makeLink(`https://www.google.it/search?q=${encodeURIComponent('sagre '+città+' 2026')}`,
+      '■ GOOGLE SAGRE','Ricerca Google mirata su sagre','Google','tag-locale'),
+    makeLink(`https://www.google.it/search?q=${encodeURIComponent('eventi '+città+' aprile 2026 pro loco')}`,
+      '■ GOOGLE PRO LOCO','Pro Loco ed eventi gratuiti','Google','tag-locale'),
+    makeLink(`https://www.google.it/search?q=${encodeURIComponent('circolo arci '+città+' 2026 programma')}`,
+      '■ GOOGLE ARCI','Circoli Arci e programma','Google','tag-arci'),
+    makeLink(`https://www.google.it/search?q=${encodeURIComponent('mercatino '+città+' 2026')}`,
+      '■ GOOGLE MERCATINI','Mercatini e fiere locali','Google','tag-sagre'),
+  ];
+
+  document.getElementById('fontiGrid').innerHTML = fontiTerritoriali.join('');
+  document.getElementById('fontiNazionali').innerHTML = fontiNaz.join('');
+}
+
 
 // ══════════════════════════════════════════════════════════════
 //  DATI EVENTI
@@ -1057,7 +1360,7 @@ function render(){
   else{
     const w=document.createElement("div");w.className="table-wrap";
     const t=document.createElement("table");
-    t.innerHTML=`<thead><tr>${["Evento","Data","Km","Tempo","⛽","🛣","Biglietto","💰","🌿",""].map(h=>`<th>${h}</th>`).join("")}</tr></thead>`;
+    t.innerHTML=`<thead><tr>${["Evento","◙ Data","↔ Km","◄► Tempo","▣ Benz.","═══ Aut.","Biglietto","£ Tot.","♦",""].map(h=>`<th>${h}</th>`).join("")}</tr></thead>`;
     const tb=document.createElement("tbody");
     evs.forEach((ev,i)=>{
       tb.appendChild(mkRow(ev,i));
@@ -1077,9 +1380,9 @@ function mkCard(ev){
     <span class="card-emoji">${ev.emoji}</span>
     <div class="card-info">
       <div class="card-title">${ev.nome}</div>
-      <div class="card-luogo">📍 ${ev.luogo}</div>
-      <div class="card-data">📅 ${ev.data}</div>
-      <div class="tags">${tagsH(ev.tags)}${ev.aperto?'<span class="tag tag-aperto">🌿</span>':""}</div>
+      <div class="card-luogo">► ${ev.luogo}</div>
+      <div class="card-data">◙ ${ev.data}</div>
+      <div class="tags">${tagsH(ev.tags)}${ev.aperto?'<span class="tag tag-aperto">♦ Aperto</span>':""}</div>
     </div>
     <div class="card-meta">
       <span class="badge badge-${i}">${l}</span>
@@ -1096,11 +1399,11 @@ function detHtml(ev,c){
   const m=ev.mappa.replace(/'/g,"\\'"),n=ev.nome.replace(/'/g,"\\'");
   return`<div class="card-desc">${ev.desc}</div>
   <div class="detail-box"><div class="detail-title">Dettaglio Costi</div>
-    ${[["📏 Distanza A/R",ev.distKm?c.ar+" km":"In loco"],["🕒 Tempo guida",tempo(ev.distKm)],["⛽ Carburante A/R",ev.distKm?c.carb.toFixed(2)+" €":"—"],["🛣 Autostrada A/R",c.aut?c.aut.toFixed(2)+" €":"—"],["🎟 Biglietto",ev.costoEv]].map(([k,v])=>`<div class="detail-row"><span class="dk">${k}</span><span class="dv">${v}</span></div>`).join("")}
+    ${[["↔ Distanza A/R",ev.distKm?c.ar+" km":"In loco"],["◄► Tempo guida",tempo(ev.distKm)],["▣ Carburante A/R",ev.distKm?c.carb.toFixed(2)+" €":"—"],["══ Autostrada A/R",c.aut?c.aut.toFixed(2)+" €":"—"],["♠ Biglietto",ev.costoEv]].map(([k,v])=>`<div class="detail-row"><span class="dk">${k}</span><span class="dv">${v}</span></div>`).join("")}
     <div class="detail-total"><span class="tk">Totale stimato</span><span class="tv" style="color:${fg}">${l}</span></div>
     <div class="detail-note">*Esclusi parcheggio, pasti, alloggio</div>
   </div>
-  ${ev.cammino?`<div class="cammino-box"><div class="exp-label" style="color:#1a6a1a;margin-bottom:4px">🥾 Escursione</div><div style="display:flex;gap:14px;font-size:.79rem;flex-wrap:wrap"><span style="color:${DIFF[ev.cammino.livello]||"#555"};font-weight:700">${ev.cammino.livello}</span><span>📏 ${ev.cammino.km} km</span><span>⏱ ${ev.cammino.ore}</span></div></div>`:""}
+  ${ev.cammino?`<div class="cammino-box"><div class="exp-label" style="color:#1a6a1a;margin-bottom:4px">▲ Escursione</div><div style="display:flex;gap:14px;font-size:.79rem;flex-wrap:wrap"><span style="color:${DIFF[ev.cammino.livello]||"#555"};font-weight:700">${ev.cammino.livello}</span><span>↔ ${ev.cammino.km} km</span><span>◄► ${ev.cammino.ore}</span></div></div>`:""}
   <div class="ev-actions">
     <a class="ev-btn ev-btn-sito" href="${ev.url}" target="_blank" rel="noopener noreferrer">🔗 Sito</a>
     <button class="ev-btn ev-btn-mappa" onclick="apriIndicazioni('${m}')">🧭 Indicazioni</button>
@@ -1122,7 +1425,7 @@ function mkRow(ev,idx){
     <td class="td-num td-aut">${c.aut?c.aut.toFixed(2)+" €":"—"}</td>
     <td style="font-size:.72rem">${ev.costoEv}</td>
     <td><span class="badge badge-${i}" style="font-size:.73rem">${l}</span></td>
-    <td class="td-center">${ev.aperto?'<span style="color:#1a7a30">🌿</span>':'<span style="color:#ccc">🏠</span>'}</td>
+    <td class="td-center">${ev.aperto?'<span style="color:#1a7a30">♦</span>':'<span style="color:#ccc">◘</span>'}</td>
     <td class="td-chevron">${open?"▲":"▼"}</td>`;
   return tr;
 }
@@ -1135,7 +1438,7 @@ function mkExpRow(ev){
   td.innerHTML=`<div class="exp-inner"><div class="exp-grid">
     <div><div class="exp-label">Descrizione</div>
       <div style="font-size:.79rem;color:var(--mid);line-height:1.6">${ev.desc}</div>
-      ${ev.cammino?`<div style="margin-top:7px;background:#f0faf0;border:1px solid #b8ddb8;border-radius:7px;padding:7px 10px;font-size:.77rem"><span style="color:${DIFF[ev.cammino.livello]||"#555"};font-weight:700">${ev.cammino.livello}</span> · ${ev.cammino.km} km · ⏱ ${ev.cammino.ore}</div>`:""}
+      ${ev.cammino?`<div style="margin-top:7px;background:#f0faf0;border:1px solid #b8ddb8;border-radius:7px;padding:7px 10px;font-size:.77rem"><span style="color:${DIFF[ev.cammino.livello]||"#555"};font-weight:700">${ev.cammino.livello}</span> · ${ev.cammino.km} km · ◄► ${ev.cammino.ore}</div>`:""}
       <div class="ev-actions" style="margin-top:8px">
         <a class="ev-btn ev-btn-sito" href="${ev.url}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="font-size:.71rem;padding:6px 11px">🔗 Sito</a>
         <button class="ev-btn ev-btn-mappa" onclick="apriIndicazioni('${m}');event.stopPropagation()" style="font-size:.71rem;padding:6px 11px">🧭 Indicazioni</button>
@@ -1143,7 +1446,7 @@ function mkExpRow(ev){
       </div>
     </div>
     <div><div class="exp-label">Costi (1 persona)</div>
-      ${[["⛽ Carb. A/R",ev.distKm?c.carb.toFixed(2)+" €":"—"],["🛣 Autostrada A/R",c.aut?c.aut.toFixed(2)+" €":"—"],["🎟 Biglietto",ev.costoEv],["🕒 Tempo",tempo(ev.distKm)]].map(([k,v])=>`<div class="detail-row"><span class="dk">${k}</span><span class="dv">${v}</span></div>`).join("")}
+      ${[["▣ Carb. A/R",ev.distKm?c.carb.toFixed(2)+" €":"—"],["══ Autostrada A/R",c.aut?c.aut.toFixed(2)+" €":"—"],["♠ Biglietto",ev.costoEv],["◄► Tempo",tempo(ev.distKm)]].map(([k,v])=>`<div class="detail-row"><span class="dk">${k}</span><span class="dv">${v}</span></div>`).join("")}
       <div style="margin-top:5px;font-weight:700;color:${fg}">${l}</div>
     </div>
     <div><div class="exp-label">Dove</div>
@@ -1445,7 +1748,7 @@ function aggiornaSavedList(){
     <li class="saved-item">
       <div>
         <div class="saved-nome">📌 ${e.nome}</div>
-        <div class="saved-data">📍 ${e.luogo} · 📅 ${e.dataLabel}</div>
+        <div class="saved-data">► ${e.luogo} · ◙ ${e.dataLabel}</div>
       </div>
       <button class="saved-del" onclick="eliminaEventoLocale(${e.id})" title="Elimina">🗑</button>
     </li>`).join("");
