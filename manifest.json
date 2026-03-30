@@ -1,0 +1,26 @@
+{
+  "name": "Evento Explorer – Aprile 2026",
+  "short_name": "Evento Explorer",
+  "description": "20 eventi culturali, enogastronomici e naturalistici entro 1000 km da Pavia. App offline, nessun tracciante.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fff8ee",
+  "theme_color": "#fff8ee",
+  "lang": "it",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
