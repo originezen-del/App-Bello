@@ -1,0 +1,2071 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5">
+<meta name="theme-color" content="#fff8ee">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Evento Explorer">
+<meta name="description" content="Scopri eventi vicino a te – Aprile 2026. App offline, nessun tracciante.">
+<title>Evento Explorer – Aprile 2026</title>
+<link rel="manifest" href="manifest.json">
+<style>
+/* ══════════════════════════════════════════════════════
+   RESET & VARIABILI
+══════════════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  /* ── Palette ispirata al Monopoli prima serie (1935-1960) ── */
+  --bg:#fdf6e3;          /* avorio grano */
+  --bgalt:#f5ead0;       /* avorio scuro */
+  --card:#fffdf5;        /* pergamena chiara */
+  --cardalt:#fef9ec;     /* pergamena medio */
+  --border:#d4b896;      /* marrone caldo chiaro */
+  --borderacc:#b8956a;   /* marrone medio */
+  --hdr:#2c1a0e;         /* marrone scurissimo = testo titoli */
+  --hdrbg:#e8c49a;       /* arancio terracotta caldo – header */
+  --hdrbord:#b5541b;     /* mattone scuro – bordo header */
+  --accent:#b5451b;      /* arancio mattone = colore principale */
+  --soft2:#c8873a;       /* arancio ambra */
+  --text:#1e140a;        /* quasi nero caldo */
+  --mid:#5c3d1e;         /* marrone medio testi secondari */
+  --soft:#8a6640;        /* marrone chiaro */
+  --faint:#b8a080;       /* beige chiaro */
+  --link:#1a4a6e;        /* blu navy scuro */
+  --hover:#fef8e8;       /* hover giallo pallido */
+  --expbg:#fffef8;       /* espanso quasi bianco caldo */
+  /* badge colore Monopoli */
+  --badge-verde:#2d6a2d;  /* verde proprietà */
+  --badge-giallo:#b8960a; /* giallo */
+  --badge-arancio:#b5451b;/* arancio */
+  --badge-rosso:#8b1a1a;  /* rosso mattone */
+  /* piattaforme */
+  --android:#3ddc84;--ios:#007aff;--windows:#0078d4;
+}
+html,body{font-family:'Segoe UI','Roboto',Arial,sans-serif;background:var(--bg);color:var(--text);font-size:16px;min-height:100%}
+
+/* ══════════════════════════════════════════════════════
+   OVERLAY MODALE (condivisione / installazione)
+══════════════════════════════════════════════════════ */
+.overlay{display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.55);align-items:flex-end;justify-content:center}
+.overlay.show{display:flex}
+@media(min-width:600px){.overlay{align-items:center}}
+.modal{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:0;overflow:hidden;box-shadow:0 -4px 30px rgba(0,0,0,.2);animation:modalUp .28s ease-out}
+@media(min-width:600px){.modal{border-radius:16px}}
+@keyframes modalUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--border)}
+.modal-title{font-weight:800;color:var(--hdr);font-size:1rem}
+.modal-close{background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--faint);line-height:1;padding:2px 4px}
+.modal-body{padding:16px 18px 20px}
+.modal-body p{font-size:.85rem;color:var(--mid);line-height:1.6;margin-bottom:12px}
+.modal-steps{list-style:none;counter-reset:step;margin-bottom:16px}
+.modal-steps li{counter-increment:step;display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:.83rem;color:var(--mid)}
+.modal-steps li:last-child{border-bottom:none}
+.modal-steps li::before{content:counter(step);background:var(--accent);color:#fff;border-radius:50%;min-width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0;margin-top:1px}
+.modal-btn{display:block;width:100%;padding:12px;border:none;border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;transition:filter .15s}
+.modal-btn:hover{filter:brightness(1.08)}
+.modal-btn-primary{background:var(--accent);color:#fff}
+.modal-btn-android{background:var(--android);color:#0a2a14}
+.modal-btn-ios{background:var(--ios);color:#fff}
+.modal-btn-windows{background:var(--windows);color:#fff}
+.modal-btn-copy{background:#555;color:#fff}
+.modal-note{font-size:.72rem;color:var(--faint);text-align:center;margin-top:10px}
+.modal-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:14px}
+.modal-tab{flex:1;padding:9px 4px;border:none;background:none;font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit;color:var(--soft);border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s}
+.modal-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* ══════════════════════════════════════════════════════
+   OFFLINE BADGE
+══════════════════════════════════════════════════════ */
+#offlineBadge{display:none;position:fixed;top:8px;right:8px;z-index:700;background:#fde8e0;border:1.5px solid #c0392b;color:#8a2020;border-radius:20px;padding:5px 12px;font-size:.7rem;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+#offlineBadge.show{display:block}
+
+/* ══════════════════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════════════════ */
+#header{background:linear-gradient(160deg,#c45a1a 0%,#a03a0a 100%);border-bottom:3px solid #7a2800;padding:13px 15px 11px}
+.hdr-inner{max-width:1100px;margin:0 auto}
+.hdr-eyebrow{font-size:.62rem;letter-spacing:.3em;color:#f8d8b0;text-transform:uppercase;margin-bottom:3px}
+#header h1{font-size:clamp(.95rem,4.5vw,1.6rem);font-weight:800;color:#fff8f0;line-height:1.2;margin-bottom:3px;text-shadow:0 1px 3px rgba(0,0,0,.3)}
+#header .sub{color:#f0d0a8;font-size:.74rem;margin-bottom:10px}
+
+/* campo partenza */
+.field-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.field-row label{font-size:.79rem;color:#f8d8b0;white-space:nowrap;font-weight:600}
+.partenza-wrap{position:relative;flex:1;min-width:150px;max-width:280px}
+#partenzaInput{width:100%;border:2px solid var(--borderacc);border-radius:10px;padding:8px 36px 8px 12px;font-size:.86rem;color:var(--text);background:#fff;outline:none;transition:border-color .2s}
+#partenzaInput:focus{border-color:var(--accent)}
+#clearPartenza{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--faint);display:none;line-height:1}
+#clearPartenza.show{display:block}
+.partenza-hint{font-size:.68rem;color:var(--soft);margin-top:3px;padding-left:2px}
+
+/* slider raggio */
+.raggio-wrap{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px}
+.raggio-wrap label{font-size:.79rem;color:#f8d8b0;white-space:nowrap;font-weight:600}
+#raggioSlider{-webkit-appearance:none;appearance:none;width:190px;height:7px;border-radius:4px;background:linear-gradient(to right,#fff8f0 0%,#fff8f0 var(--pct,100%),rgba(255,255,255,.25) var(--pct,100%),rgba(255,255,255,.25) 100%);outline:none;cursor:pointer}
+#raggioSlider::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#fff8f0;box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer;border:2px solid #7a2800}
+#raggioSlider::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff8f0;border:2px solid #7a2800;cursor:pointer}
+#raggioVal{font-weight:700;color:#ffe0b0;font-size:.85rem;min-width:80px;text-shadow:0 1px 2px rgba(0,0,0,.2)}
+.range-labels{font-size:.64rem;color:#e0b888;display:flex;justify-content:space-between;width:190px}
+
+/* barra azioni header */
+.hdr-actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.hdr-pill{display:inline-flex;align-items:center;gap:5px;border:none;border-radius:16px;padding:5px 12px;font-size:.71rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;transition:filter .15s}
+.hdr-pill:hover{filter:brightness(1.08)}
+.pill-diesel{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);color:#fff8f0}
+.pill-install{background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.5);color:#fff8f0}
+.pill-condividi{background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.5);color:#fff8f0}
+
+/* ══════════════════════════════════════════════════════
+   MOTORI DI RICERCA
+══════════════════════════════════════════════════════ */
+#motoriBarra{background:#f5e8c8;border-bottom:1px solid #c8a060;padding:6px 14px;display:flex;gap:7px;align-items:center;flex-wrap:wrap;font-size:.71rem;color:var(--mid)}
+#motoriBarra strong{color:var(--mid)}
+.motore-link{display:inline-flex;align-items:center;gap:3px;background:#fff;border:1.5px solid var(--borderacc);border-radius:14px;padding:3px 10px;color:var(--accent);text-decoration:none;font-weight:600;font-size:.71rem;transition:background .15s}
+.motore-link:hover{background:var(--accent);color:#fff}
+
+/* ══════════════════════════════════════════════════════
+   FILTRI STICKY
+══════════════════════════════════════════════════════ */
+#filtri{background:#fef3e2;border-bottom:2px solid #d4b896;padding:8px 13px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.filtri-inner{max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.search-wrap{position:relative;flex:1;min-width:110px;max-width:180px}
+.search-icon{position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--faint);pointer-events:none;font-size:.82rem}
+#searchInput{border:1.5px solid var(--border);border-radius:9px;padding:7px 10px 7px 26px;font-size:.8rem;width:100%;color:var(--text);background:#fafafa;outline:none}
+.cats{display:flex;gap:4px;flex-wrap:wrap}
+.cat-btn{padding:6px 10px;border-radius:18px;border:1.5px solid var(--border);background:#fff;color:var(--mid);font-size:.7rem;cursor:pointer;font-family:inherit;font-weight:normal;transition:all .15s;white-space:nowrap}
+.cat-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700}
+#apertoBtn{padding:6px 10px;border-radius:18px;border:1.5px solid var(--border);background:#fff;color:var(--mid);font-size:.7rem;cursor:pointer;font-family:inherit;white-space:nowrap}
+#apertoBtn.active{background:#e8f5e8;color:#1a6a20;border-color:#2a8a40;font-weight:700}
+select{border:1.5px solid var(--border);border-radius:9px;padding:6px 8px;font-size:.7rem;color:var(--mid);background:#fff;cursor:pointer;font-family:inherit}
+.view-toggle{display:flex;border:1.5px solid var(--border);border-radius:9px;overflow:hidden}
+.view-btn{padding:6px 8px;background:#fff;color:var(--mid);border:none;font-size:.68rem;cursor:pointer;font-family:inherit;white-space:nowrap}
+.view-btn.active{background:var(--accent);color:#fff;font-weight:700}
+#evCount{font-size:.69rem;color:var(--faint);white-space:nowrap;margin-left:auto}
+
+/* ── PULSANTE AVVIA RICERCA ── */
+#avviaBtn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:18px;border:2px solid var(--accent);background:var(--accent);color:#fff;font-size:.75rem;font-family:inherit;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .3s,border-color .3s}
+#avviaBtn.pronto{background:#2d7a2d;border-color:#2d7a2d}
+#avviaBtn:hover{filter:brightness(1.09)}
+#avviaBtn:active{transform:scale(.95)}
+
+/* ══════════════════════════════════════════════════════
+   CONTENUTO
+══════════════════════════════════════════════════════ */
+#content{max-width:1100px;margin:0 auto;padding:13px 11px 30px}
+
+/* ── CARD ── */
+.ev-card{background:var(--card);border-radius:13px;border:1px solid var(--border);margin-bottom:11px;overflow:hidden;box-shadow:0 1px 5px rgba(0,0,0,.07);transition:box-shadow .2s}
+.ev-card:hover{box-shadow:0 3px 12px rgba(0,0,0,.12)}
+.card-head{padding:12px 14px;cursor:pointer;display:flex;gap:10px;align-items:flex-start;user-select:none}
+.card-emoji{font-size:1.45rem;line-height:1;margin-top:1px;flex-shrink:0}
+.card-info{flex:1;min-width:0}
+.card-title{font-weight:700;color:var(--text);font-size:.9rem;line-height:1.3;margin-bottom:2px}
+.card-luogo{color:var(--mid);font-size:.74rem;margin-bottom:3px}
+.card-data{color:var(--soft2);font-size:.72rem;margin-bottom:4px}
+.tags{display:flex;flex-wrap:wrap;gap:3px}
+.tag{font-size:.59rem;padding:1px 6px;border-radius:9px;color:#fff;font-weight:600}
+.tag-aperto{background:#e8f5e8;color:#1a6a1a;font-weight:600}
+.card-meta{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:72px}
+.badge{font-weight:700;font-size:.79rem;padding:3px 9px;border-radius:11px;white-space:nowrap}
+.badge-0{background:#d4f0d4;color:var(--badge-verde)}
+.badge-1{background:#fef8d0;color:var(--badge-giallo)}
+.badge-2{background:#fde8d0;color:var(--badge-arancio)}
+.badge-3{background:#fdd8d8;color:var(--badge-rosso)}
+.card-tempo{color:var(--faint);font-size:.68rem}
+.card-chevron{color:var(--soft);font-size:.9rem}
+
+/* ── DETTAGLIO CARD ── */
+.card-detail{border-top:1px solid var(--border);background:var(--expbg);padding:12px 14px;display:none}
+.card-detail.open{display:block}
+.card-desc{color:var(--mid);font-size:.8rem;line-height:1.65;margin-bottom:11px}
+.detail-box{background:var(--bg);border-radius:9px;padding:10px 12px;margin-bottom:11px}
+.detail-title{font-weight:700;color:var(--accent);font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;margin-bottom:7px}
+.detail-row{display:flex;justify-content:space-between;padding-bottom:5px;margin-bottom:5px;border-bottom:1px solid var(--border);font-size:.77rem}
+.detail-row:last-child{border-bottom:none;padding-bottom:0;margin-bottom:0}
+.detail-row .dk{color:var(--soft)}.detail-row .dv{color:var(--text);font-weight:600}
+.detail-total{display:flex;justify-content:space-between;margin-top:7px;padding-top:7px;border-top:1px dashed var(--borderacc)}
+.detail-total .tk{font-weight:700;color:var(--accent)}.detail-total .tv{font-weight:700;font-size:.9rem}
+.detail-note{font-size:.61rem;color:var(--faint);margin-top:3px}
+.cammino-box{background:#f0faf0;border:1px solid #b8ddb8;border-radius:9px;padding:8px 12px;margin-bottom:11px}
+
+/* ── AZIONI EVENTO – in fila orizzontale, senza sovrapposizioni ── */
+.ev-actions{display:flex;gap:7px;flex-wrap:nowrap;margin-top:10px;overflow-x:auto;padding-bottom:2px}
+.ev-btn{display:inline-flex;align-items:center;gap:5px;border:none;border-radius:9px;padding:8px 13px;font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;text-decoration:none;flex-shrink:0;transition:filter .15s}
+.ev-btn:hover{filter:brightness(1.09)}
+.ev-btn-sito{background:var(--accent);color:#fff}
+.ev-btn-mappa{background:#1a6a9a;color:#fff}
+.ev-btn-share{background:#2a8a40;color:#fff}
+
+/* ── TABELLA ── */
+.table-wrap{overflow-x:auto;border-radius:11px;border:1px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,.07)}
+table{width:100%;border-collapse:collapse;min-width:820px}
+thead tr{background:var(--bgalt);border-bottom:2px solid var(--borderacc)}
+th{padding:8px 8px;color:var(--accent);font-weight:700;text-align:left;font-size:.67rem;letter-spacing:.04em;white-space:nowrap}
+tbody tr{cursor:pointer;transition:background .1s}
+tbody tr:hover{background:var(--hover)!important}
+tbody tr.even{background:var(--card)}tbody tr.odd{background:var(--cardalt)}
+tbody tr.exp-row{background:var(--expbg)!important;cursor:default}
+td{padding:8px 8px;vertical-align:middle;font-size:.74rem;border-bottom:1px solid var(--border)}
+.td-nome a{color:var(--link);font-weight:700;text-decoration:none;font-size:.77rem;line-height:1.3}
+.td-nome a:hover{text-decoration:underline}
+.td-sub{color:var(--soft);font-size:.63rem;margin-top:1px}
+.td-tags{display:flex;gap:2px;flex-wrap:wrap;margin-top:2px}
+.td-data{color:var(--accent);white-space:nowrap}
+.td-num{text-align:right}
+.td-km{color:var(--mid)}.td-tempo{white-space:nowrap;color:var(--mid)}.td-carb{color:#2a6020}.td-aut{color:#2a4a7a}
+.td-center{text-align:center}
+.td-chevron{text-align:center;color:var(--faint);font-size:.8rem}
+.exp-inner{padding:12px 15px}
+.exp-grid{display:grid;grid-template-columns:2fr 1.4fr 1fr;gap:16px}
+@media(max-width:700px){.exp-grid{grid-template-columns:1fr}}
+.exp-label{color:var(--accent);font-size:.64rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+
+/* ── LEGENDA ── */
+#legenda{margin-top:14px;background:#fff;border:1px solid var(--border);border-radius:11px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}
+.leg-text{flex:1;min-width:200px;font-size:.69rem;color:var(--soft);line-height:1.75}
+.leg-text a{color:var(--link)}
+.leg-badges{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+#footer{text-align:center;padding:8px 0 4px;font-size:.61rem;color:var(--faint)}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:#fff;padding:9px 20px;border-radius:20px;font-size:.8rem;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:900}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+
+/* ── FILTRI TEMPORALI ── */
+.tempo-filtri{display:flex;gap:5px;flex-wrap:wrap;margin-top:0}
+.tempo-btn{padding:6px 11px;border-radius:18px;border:1.5px solid var(--border);background:#fff;color:var(--mid);font-size:.7rem;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s}
+.tempo-btn.active{background:#1a4a8a;color:#fff;border-color:#1a4a8a;font-weight:700}
+.tempo-btn:hover:not(.active){background:var(--bgalt)}
+
+/* ── CARD EVENTO LOCALE (aggiunto dall'utente) ── */
+.ev-card.locale{border-left:3px solid #1a6a9a}
+.locale-badge{display:inline-flex;align-items:center;gap:3px;background:#e8f0ff;border:1px solid #a0b8e8;border-radius:8px;padding:1px 7px;font-size:.62rem;color:#1a3a7a;font-weight:600;margin-left:6px}
+
+/* ── FORM AGGIUNGI EVENTO ── */
+.form-group{margin-bottom:13px}
+.form-group label{display:block;font-size:.78rem;font-weight:600;color:var(--mid);margin-bottom:5px}
+.form-input{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:8px 11px;font-size:.84rem;color:var(--text);background:#fff;outline:none;font-family:inherit;transition:border-color .2s}
+.form-input:focus{border-color:var(--accent)}
+.form-row{display:flex;gap:9px}
+.form-row .form-group{flex:1}
+select.form-input{cursor:pointer}
+.form-hint{font-size:.67rem;color:var(--faint);margin-top:3px}
+.form-error{font-size:.73rem;color:#c0392b;margin-top:5px;display:none}
+.form-error.show{display:block}
+
+/* ── LISTA EVENTI SALVATI (nel modal) ── */
+.saved-list{list-style:none;margin-top:12px}
+.saved-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:.79rem;gap:8px}
+.saved-item:last-child{border-bottom:none}
+.saved-nome{font-weight:600;color:var(--text);flex:1}
+.saved-data{font-size:.7rem;color:var(--soft)}
+.saved-del{background:none;border:none;cursor:pointer;color:var(--faint);font-size:1.1rem;padding:2px 5px;flex-shrink:0}
+.saved-del:hover{color:#c0392b}
+.no-saved{font-size:.8rem;color:var(--faint);text-align:center;padding:16px 0}
+
+
+/* ════════════════════════════════════════════════════
+   ICONE STILE MONOPOLI PRIMA SERIE
+   Linee nette, forme geometriche, nero su crema
+   Usate come background-image su elementi .ico-*
+════════════════════════════════════════════════════ */
+.ico{display:inline-flex;align-items:center;justify-content:center;
+     width:1.4em;height:1.4em;flex-shrink:0;vertical-align:middle}
+
+/* Auto (pedina macchina Monopoli) */
+.ico-auto::before{content:"🚗";font-size:.95em}
+
+/* Casa/dado (distanza) */
+.ico-km::before{content:"📐";font-size:.9em}
+
+/* Orologio (tempo) → clessidra stile classico */
+.ico-tempo::before{content:"⧗";font-size:1.1em;font-family:serif}
+
+/* Cappello a cilindro (top hat - pedina Monopoli) → costo */
+.ico-costo::before{content:"🎩";font-size:.9em}
+
+/* Biglietto (ferro da stiro = pedina) → biglietto */
+.ico-biglietto::before{content:"🎫";font-size:.9em}
+
+/* Bandiera (marcatore Monopoli) */
+.ico-luogo::before{content:"⚑";font-size:1.1em;font-family:serif;color:var(--accent)}
+
+/* Dado (evento) */
+.ico-evento::before{content:"⚄";font-size:1.1em;font-family:serif}
+
+/* Banca (costo totale → simbolo £ stile Monopoli) */
+.ico-totale::before{content:"£";font-size:1em;font-family:Georgia,serif;font-weight:700;color:var(--accent)}
+
+/* Autostrada (pedaggio) */
+.ico-pedaggio::before{content:"═";font-size:1.2em;font-family:serif;font-weight:700}
+
+/* Chiave inglese (personalizza) */
+.ico-impostazioni::before{content:"⚙";font-size:1em}
+
+/* Carta "Probabilità" Monopoli (punto interrogativo) */
+.ico-info::before{content:"?";font-size:1.1em;font-family:Georgia,serif;font-weight:700;color:var(--accent)}
+
+/* Stelle (valutazione/aperto) */
+.ico-aperto::before{content:"✦";font-size:1em;color:#2d7a2d}
+.ico-chiuso::before{content:"◼";font-size:.7em;color:var(--faint)}
+
+/* Bussola (indicazioni) */
+.ico-mappa::before{content:"◎";font-size:1em;font-family:serif;color:#1a4a6e}
+
+/* Freccia condividi */
+.ico-share::before{content:"↗";font-size:1.1em;font-weight:700;color:#2d7a2d}
+
+/* Più (aggiungi) */
+.ico-aggiungi::before{content:"✚";font-size:1em;color:#fff}
+
+
+/* ════════════════════════════════════════════════════════
+   ICONE RETRO ANNI '80 – CP437 / DOS / Arcade
+   Font monospace per rendering pixel-perfect
+════════════════════════════════════════════════════════ */
+th .r80, td .r80,
+.card-data, .r80 {
+  font-family: 'Courier New', 'Lucida Console', monospace;
+  letter-spacing: .05em;
+}
+th {
+  font-family: 'Courier New', 'Lucida Console', monospace;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-size: .62rem !important;
+  color: var(--accent) !important;
+}
+.card-data {
+  font-family: 'Courier New', monospace;
+  font-size: .71rem;
+  color: var(--soft2);
+  letter-spacing: .04em;
+}
+.card-luogo {
+  font-family: 'Courier New', monospace;
+  font-size: .73rem;
+}
+.detail-row .dk {
+  font-family: 'Courier New', monospace;
+  font-size: .73rem;
+  letter-spacing: .04em;
+}
+
+
+/* ════════════════════════════════════════════════════════
+   PANNELLO RICERCA EVENTI LOCALI
+════════════════════════════════════════════════════════ */
+#pannelloLocale{
+  background:linear-gradient(135deg,#fde8c0,#f5d090);
+  border:2px solid var(--hdrbord);
+  border-radius:0;
+  padding:10px 14px;
+  display:none;
+}
+#pannelloLocale.show{display:block}
+.locale-titolo{font-family:'Courier New',monospace;font-weight:700;
+  color:var(--hdr);font-size:.78rem;letter-spacing:.12em;
+  text-transform:uppercase;margin-bottom:4px}
+.locale-sub{font-size:.7rem;color:var(--mid);margin-bottom:10px;line-height:1.5}
+.locale-città{font-weight:700;color:var(--accent)}
+
+/* Griglia fonti */
+.fonti-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px;margin-bottom:10px}
+.fonte-btn{display:flex;flex-direction:column;align-items:flex-start;
+  gap:2px;padding:8px 10px;border-radius:9px;border:1.5px solid var(--borderacc);
+  background:var(--card);cursor:pointer;text-align:left;
+  text-decoration:none;transition:background .15s,border-color .15s;
+  font-family:inherit}
+.fonte-btn:hover{background:var(--accent);border-color:var(--accent)}
+.fonte-btn:hover .fonte-nome{color:#fff}
+.fonte-btn:hover .fonte-desc{color:rgba(255,255,255,.8)}
+.fonte-nome{font-size:.74rem;font-weight:700;color:var(--hdr);
+  font-family:'Courier New',monospace;letter-spacing:.04em}
+.fonte-desc{font-size:.62rem;color:var(--soft);line-height:1.3}
+.fonte-tag{display:inline-block;background:var(--bgalt);border-radius:4px;
+  padding:0 5px;font-size:.58rem;color:var(--mid);margin-top:3px;
+  font-family:'Courier New',monospace}
+.fonte-tag.tag-locale{background:#fff0cc;color:#7a4a00}
+.fonte-tag.tag-comune{background:#e0f0ff;color:#1a3a6a}
+.fonte-tag.tag-arci{background:#ffe0e0;color:#7a1a1a}
+.fonte-tag.tag-sagre{background:#e0ffe0;color:#1a6a1a}
+
+/* Nota sotto */
+.locale-nota{font-size:.67rem;color:var(--faint);border-top:1px solid var(--borderacc);
+  padding-top:8px;line-height:1.6}
+.locale-nota strong{color:var(--mid)}
+
+/* Pulsante apri pannello */
+#btnLocale{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:18px;
+  border:2px solid var(--accent);background:var(--hdrbg);
+  color:var(--accent);font-size:.75rem;font-family:'Courier New',monospace;
+  font-weight:700;cursor:pointer;white-space:nowrap;letter-spacing:.06em;
+  transition:background .2s,color .2s;
+}
+#btnLocale.aperto{background:var(--accent);color:#fff}
+#btnLocale:hover{background:var(--accent);color:#fff}
+
+
+/* ── PULSANTI TIPO CARBURANTE ── */
+.tipo-carb-btn{
+  display:flex;flex-direction:column;align-items:flex-start;gap:1px;
+  padding:9px 10px;border-radius:9px;border:2px solid var(--borderacc);
+  background:var(--card);cursor:pointer;font-family:inherit;
+  text-align:left;transition:all .18s;position:relative;
+}
+.tipo-carb-btn:hover,.tipo-carb-btn.selezionato{
+  background:var(--accent);border-color:var(--accent);
+}
+.tipo-carb-btn:hover .tipo-carb-nome,
+.tipo-carb-btn.selezionato .tipo-carb-nome{color:#fff}
+.tipo-carb-btn:hover .tipo-carb-prezzo,
+.tipo-carb-btn.selezionato .tipo-carb-prezzo{color:#ffd8a8}
+.tipo-carb-btn:hover .tipo-carb-km,
+.tipo-carb-btn.selezionato .tipo-carb-km{color:rgba(255,255,255,.7)}
+.tipo-carb-btn:hover .tipo-carb-ico,
+.tipo-carb-btn.selezionato .tipo-carb-ico{color:#fff}
+.tipo-carb-ico{font-family:'Courier New',monospace;font-size:.9rem;color:var(--accent);font-weight:700}
+.tipo-carb-nome{font-weight:700;font-size:.8rem;color:var(--hdr);font-family:'Courier New',monospace;letter-spacing:.04em}
+.tipo-carb-prezzo{font-size:.72rem;color:var(--accent);font-weight:600;font-family:'Courier New',monospace}
+.tipo-carb-km{font-size:.65rem;color:var(--soft)}
+.tipo-carb-btn.selezionato::after{
+  content:'✔';position:absolute;top:5px;right:7px;
+  font-size:.75rem;color:#fff;font-weight:700;
+}
+
+@media(max-width:580px){
+  .hdr-actions{gap:5px}
+  .hdr-pill{font-size:.68rem;padding:4px 10px}
+  .cats .cat-btn{font-size:.67rem;padding:5px 8px}
+  .ev-actions{gap:5px}
+  .ev-btn{font-size:.73rem;padding:7px 10px}
+}
+</style>
+</head>
+<body>
+
+<!-- OFFLINE BADGE -->
+<div id="offlineBadge">📵 Offline – dati in cache</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════════════════════
+     OVERLAY INSTALLAZIONE
+══════════════════════════════════════════════════════ -->
+<div class="overlay" id="overlayInstall" onclick="chiudiOverlay('overlayInstall')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <span class="modal-title">📲 Installa Evento Explorer</span>
+      <button class="modal-close" onclick="chiudiOverlay('overlayInstall')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-tabs">
+        <button class="modal-tab active" onclick="switchTab('android')">🤖 Android</button>
+        <button class="modal-tab" onclick="switchTab('ios')">🍎 iPhone/iPad</button>
+        <button class="modal-tab" onclick="switchTab('windows')">🖥 Windows</button>
+      </div>
+
+      <!-- ANDROID -->
+      <div class="tab-panel active" id="tab-android">
+        <p>Aggiungi l'app al <strong>cassetto delle applicazioni</strong> del tuo Android — si apre in un tap, funziona offline.</p>
+        <ol class="modal-steps">
+          <li>Apri questo file in <strong>Chrome per Android</strong></li>
+          <li>Tocca i <strong>tre puntini ⋮</strong> in alto a destra</li>
+          <li>Seleziona <strong>"Aggiungi a schermata Home"</strong> o <strong>"Installa app"</strong></li>
+          <li>Tocca <strong>Installa</strong> nella finestra di conferma</li>
+          <li>L'icona 🗺️ apparirà nel cassetto app e nella schermata Home</li>
+        </ol>
+        <button class="modal-btn modal-btn-android" id="btnInstallAndroid" style="display:none" onclick="eseguiInstall()">⬇️ Installa ora (Chrome rileva il dispositivo)</button>
+        <p class="modal-note">Se il pulsante non appare, usa i tre puntini del browser come da istruzioni sopra.</p>
+      </div>
+
+      <!-- iOS -->
+      <div class="tab-panel" id="tab-ios">
+        <p>Su iPhone e iPad si aggiunge alla <strong>schermata Home</strong> direttamente da Safari (non da Chrome).</p>
+        <ol class="modal-steps">
+          <li>Apri questo file in <strong>Safari</strong></li>
+          <li>Tocca il pulsante <strong>Condividi</strong> □↑ (in basso al centro su iPhone, in alto su iPad)</li>
+          <li>Scorri verso il basso e tocca <strong>"Aggiungi a schermata Home"</strong></li>
+          <li>Modifica il nome se vuoi, poi tocca <strong>Aggiungi</strong></li>
+          <li>L'icona 🗺️ apparirà nella schermata Home come qualsiasi altra app</li>
+        </ol>
+        <p class="modal-note">Safari richiesto. Chrome su iOS non supporta l'installazione PWA.</p>
+      </div>
+
+      <!-- WINDOWS -->
+      <div class="tab-panel" id="tab-windows">
+        <p>Su Windows si installa come <strong>app desktop</strong> da Chrome o Edge — apparirà nel menu Start.</p>
+        <ol class="modal-steps">
+          <li>Apri questo file in <strong>Chrome</strong> o <strong>Edge</strong></li>
+          <li>Nella barra degli indirizzi vedrai un'icona <strong>⊕ Installa</strong> — cliccala</li>
+          <li><em>Oppure:</em> clicca i <strong>tre puntini ⋮</strong> → <strong>"Installa Evento Explorer"</strong></li>
+          <li>Clicca <strong>Installa</strong> nella finestra di conferma</li>
+          <li>L'app si aprirà in una finestra dedicata e apparirà nel menu Start e sulla barra delle applicazioni</li>
+        </ol>
+        <button class="modal-btn modal-btn-windows" id="btnInstallWindows" style="display:none" onclick="eseguiInstall()">⬇️ Installa ora</button>
+        <p class="modal-note">Funziona offline dopo la prima apertura.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     OVERLAY CONDIVISIONE
+══════════════════════════════════════════════════════ -->
+<div class="overlay" id="overlayCondividi" onclick="chiudiOverlay('overlayCondividi')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <span class="modal-title">📤 Condividi</span>
+      <button class="modal-close" onclick="chiudiOverlay('overlayCondividi')">✕</button>
+    </div>
+    <div class="modal-body" id="condividiBody">
+      <!-- contenuto dinamico -->
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════════════════ -->
+<div id="header">
+  <div class="hdr-inner">
+    <div class="hdr-eyebrow">Evento Explorer · Aprile 2026</div>
+    <h1>🗺️ <span id="titoloH1">Cosa fare entro <span id="raggioTitolo">200</span> km</span></h1>
+    <div class="sub" id="subCount">Imposta la tua partenza e il raggio per iniziare</div>
+
+    <div class="field-row">
+      <label for="partenzaInput">📍 La mia partenza:</label>
+      <div class="partenza-wrap">
+        <input type="text" id="partenzaInput" placeholder="Es. Pavia, Milano, Torino…" autocomplete="off" spellcheck="false">
+        <button id="clearPartenza" title="Cancella">✕</button>
+      </div>
+    </div>
+    <div class="partenza-hint" id="partenzaHint" style="display:none">⚠️ Scrivi un nome di città per filtrare correttamente</div>
+
+    <div class="raggio-wrap">
+      <label>🔭 Raggio:</label>
+      <div>
+        <input type="range" id="raggioSlider" min="0" max="200" step="10" value="200">
+        <div class="range-labels"><span>0 km</span><span>200 km</span></div>
+      </div>
+      <span id="raggioVal">200 km</span>
+    </div>
+
+    <div class="hdr-actions">
+      <span class="hdr-pill pill-diesel" id="dieselLabel" onclick="apriOverlay('overlayImpostazioni')" style="cursor:pointer" title="Tocca per personalizzare">🛢 <span id="dieselValLabel">2,04 €/L · 25 km/L</span> ⚙</span>
+      <button class="hdr-pill pill-install" onclick="apriOverlay('overlayInstall')">📲 Installa</button>
+      <button class="hdr-pill pill-condividi" onclick="apriCondividiApp()">📤 Condividi app</button>
+    </div>
+  </div>
+</div>
+
+<!-- MOTORI RICERCA -->
+<div id="motoriBarra">
+  <strong>🔍 Cerca altri eventi:</strong>
+  <a class="motore-link" id="linkTrovaEventi" href="https://trovaeventi.com/eventi/" target="_blank" rel="noopener noreferrer">◙ TrovaEventi</a>
+  <a class="motore-link" id="linkPlannify"    href="https://plannify.it/" target="_blank" rel="noopener noreferrer">◙ Plannify</a>
+  <button id="btnLocale" onclick="togglePannelloLocale()" title="Apre fonti per eventi locali, sagre, Pro Loco, ARCI">
+    ♦ Cerca vicino a me
+  </button>
+</div>
+
+<!-- PANNELLO EVENTI LOCALI -->
+<div id="pannelloLocale">
+  <div class="locale-titolo">♦ EVENTI LOCALI — entro 20 km</div>
+  <div class="locale-sub">
+    Fonti specializzate per sagre, mercatini, Pro Loco, circoli, feste di quartiere.
+    Città selezionata: <span class="locale-città" id="localeCity">—</span>
+  </div>
+
+  <!-- GRUPPO 1: Portali regionali e territoriali -->
+  <div style="font-size:.64rem;font-family:'Courier New',monospace;color:var(--soft);
+              letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">
+    ► Portali territoriali
+  </div>
+  <div class="fonti-grid" id="fontiGrid">
+    <!-- Popolato dinamicamente da JS in base alla città -->
+  </div>
+
+  <!-- GRUPPO 2: Fonti sempre disponibili (non dipendono dalla città) -->
+  <div style="font-size:.64rem;font-family:'Courier New',monospace;color:var(--soft);
+              letter-spacing:.1em;text-transform:uppercase;margin:8px 0 6px">
+    ► Fonti nazionali per eventi locali
+  </div>
+  <div class="fonti-grid" id="fontiNazionali">
+    <!-- Popolato da JS -->
+  </div>
+
+  <div class="locale-nota">
+    <strong>Perché qui e non nell'app?</strong>
+    Sagre di paese, eventi Arci, feste di quartiere e Pro Loco non appaiono su nessun motore generalista —
+    vivono su bacheche fisiche, Facebook e siti comunali.
+    Questi link aprono direttamente le fonti più affidabili già filtrate per la tua città.
+    Quello che trovi puoi <strong>aggiungerlo manualmente</strong> con ➕ Aggiungi evento.
+  </div>
+</div>
+
+<!-- FILTRI STICKY -->
+<div id="filtri">
+  <div class="filtri-inner">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Cerca…">
+    </div>
+    <div class="cats" id="catButtons">
+      <button class="cat-btn active" data-cat="Tutti">Tutti</button>
+      <button class="cat-btn" data-cat="Scientifico">Scienza</button>
+      <button class="cat-btn" data-cat="Enogastronomia">Eno</button>
+      <button class="cat-btn" data-cat="Botanico">Botanico</button>
+      <button class="cat-btn" data-cat="Artistico">Arte</button>
+      <button class="cat-btn" data-cat="Natura">Natura</button>
+      <button class="cat-btn" data-cat="Ludico">Ludico</button>
+    </div>
+    <button id="apertoBtn">♦ Aperto</button>
+    <select id="sortSel">
+      <option value="distanza" selected>↔ Distanza</option>
+      <option value="costo">£ Costo</option>
+    </select>
+    <div class="view-toggle">
+      <button class="view-btn active" data-view="auto">🔄</button>
+      <button class="view-btn" data-view="card">📱</button>
+      <button class="view-btn" data-view="table">🖥</button>
+    </div>
+    <div class="tempo-filtri" id="tempoFiltri">
+      <button class="tempo-btn" data-tempo="oggi">◙ Oggi</button>
+      <button class="tempo-btn" data-tempo="mese">◙ Entro 1 mese</button>
+      <button class="tempo-btn" data-tempo="oltre">◘ Oltre 1 mese</button>
+    </div>
+    <button id="avviaBtn">🔍 Avvia ricerca</button>
+    <button class="hdr-pill" style="background:#1a6a9a;color:#fff;border:none;cursor:pointer;font-family:inherit" onclick="apriOverlay('overlayAggiungi')">➕ Aggiungi evento</button>
+    <span id="evCount"></span>
+  </div>
+</div>
+
+<!-- CONTENUTO -->
+<div id="content">
+  <div id="evList"></div>
+  <div id="legenda">
+    <div class="leg-text">
+      <strong style="color:var(--mid)">£ Costi stimati:</strong> Diesel ~2,04 €/L (Lombardia, mar 2026). Pedaggi A4 Pavia–Verona ~8 € A/R. Esclusi parcheggio, pasti, alloggio.
+      <a href="https://carburanti.mise.gov.it" target="_blank" rel="noopener noreferrer">Verifica prezzi ↗</a>
+    </div>
+    <div class="leg-badges">
+      <span class="badge badge-0">Gratis</span>
+      <span class="badge badge-1">&lt;20 €</span>
+      <span class="badge badge-2">20–50 €</span>
+      <span class="badge badge-3">&gt;50 €</span>
+    </div>
+  </div>
+  <div id="footer">App offline · Nessun tracciante · Proprietà dell'utente · Dati al 29 mar 2026</div>
+</div>
+
+
+<!-- OVERLAY IMPOSTAZIONI CARBURANTE -->
+<div class="overlay" id="overlayImpostazioni" onclick="chiudiOverlay('overlayImpostazioni')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <span class="modal-title">▣ Tipo di carburante e viaggio</span>
+      <button class="modal-close" onclick="chiudiOverlay('overlayImpostazioni')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- SCELTA TIPO CARBURANTE -->
+      <div style="font-family:'Courier New',monospace;font-size:.72rem;color:var(--mid);
+                  letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">
+        ► Scegli il tuo carburante
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px" id="tipoCarburanteGrid">
+        <button class="tipo-carb-btn" data-tipo="benzina" data-prezzo="1.748" data-consumo="14"
+          onclick="selezionaTipoCarb(this)">
+          <span class="tipo-carb-ico">◙</span>
+          <span class="tipo-carb-nome">Benzina</span>
+          <span class="tipo-carb-prezzo" id="pr_benzina">1,748 €/L</span>
+          <span class="tipo-carb-km">~14 km/L</span>
+        </button>
+        <button class="tipo-carb-btn" data-tipo="diesel" data-prezzo="2.054" data-consumo="18"
+          onclick="selezionaTipoCarb(this)">
+          <span class="tipo-carb-ico">▣</span>
+          <span class="tipo-carb-nome">Diesel</span>
+          <span class="tipo-carb-prezzo" id="pr_diesel">2,054 €/L</span>
+          <span class="tipo-carb-km">~18 km/L</span>
+        </button>
+        <button class="tipo-carb-btn" data-tipo="gpl" data-prezzo="0.681" data-consumo="10"
+          onclick="selezionaTipoCarb(this)">
+          <span class="tipo-carb-ico">◄►</span>
+          <span class="tipo-carb-nome">GPL</span>
+          <span class="tipo-carb-prezzo" id="pr_gpl">0,681 €/L</span>
+          <span class="tipo-carb-km">~10 km/L equiv.</span>
+        </button>
+        <button class="tipo-carb-btn" data-tipo="metano" data-prezzo="1.567" data-consumo="25"
+          onclick="selezionaTipoCarb(this)">
+          <span class="tipo-carb-ico">■</span>
+          <span class="tipo-carb-nome">Metano/CNG</span>
+          <span class="tipo-carb-prezzo" id="pr_metano">1,567 €/kg</span>
+          <span class="tipo-carb-km">~25 km/kg</span>
+        </button>
+        <button class="tipo-carb-btn" data-tipo="ibrida" data-prezzo="1.748" data-consumo="22"
+          onclick="selezionaTipoCarb(this)">
+          <span class="tipo-carb-ico">◙◄</span>
+          <span class="tipo-carb-nome">Ibrida</span>
+          <span class="tipo-carb-prezzo" id="pr_ibrida">1,748 €/L</span>
+          <span class="tipo-carb-km">~22 km/L</span>
+        </button>
+        <button class="tipo-carb-btn" data-tipo="elettrica" data-prezzo="0.30" data-consumo="6"
+          onclick="selezionaTipoCarb(this)">
+          <span class="tipo-carb-ico">■■</span>
+          <span class="tipo-carb-nome">Elettrica</span>
+          <span class="tipo-carb-prezzo" id="pr_elettrica">~0,30 €/kWh</span>
+          <span class="tipo-carb-km">~6 km/kWh</span>
+        </button>
+      </div>
+
+      <!-- PREZZI LIVE -->
+      <div style="background:var(--bgalt);border-radius:9px;padding:10px 13px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-family:'Courier New',monospace;font-size:.68rem;color:var(--mid);
+                       letter-spacing:.08em;text-transform:uppercase">► Prezzi oggi</span>
+          <button onclick="aggiornaPrezziLive()" id="btnAggiornaPrezzi"
+            style="background:var(--accent);color:#fff;border:none;border-radius:6px;
+                   padding:3px 10px;font-size:.67rem;cursor:pointer;font-family:'Courier New',monospace">
+            ◄► Aggiorna
+          </button>
+        </div>
+        <div id="prezziStatus" style="font-size:.7rem;color:var(--soft);margin-bottom:5px"></div>
+        <div style="font-size:.69rem;color:var(--faint)">
+          Fonte: MIMIT (Ministero Imprese) · Self service · Media nazionale
+        </div>
+      </div>
+
+      <!-- FINE TUNING MANUALE -->
+      <details style="margin-bottom:12px">
+        <summary style="font-family:'Courier New',monospace;font-size:.72rem;color:var(--mid);
+                        cursor:pointer;letter-spacing:.06em;user-select:none">
+          ≡ Affina manualmente i valori
+        </summary>
+        <div style="padding-top:10px">
+          <div class="form-group">
+            <label>▣ Prezzo (€/litro o €/kWh)</label>
+            <input class="form-input" id="imp_diesel" type="number" step="0.01" min="0.1" max="5" placeholder="2.054">
+          </div>
+          <div class="form-group">
+            <label>◄► Consumo (km/litro o km/kWh)</label>
+            <input class="form-input" id="imp_consumo" type="number" step="0.5" min="1" max="80" placeholder="18">
+          </div>
+        </div>
+      </details>
+
+      <!-- PREVIEW COSTO -->
+      <div style="background:var(--accent);color:#fff;border-radius:9px;
+                  padding:10px 14px;margin-bottom:13px;display:flex;
+                  justify-content:space-between;align-items:center">
+        <span style="font-family:'Courier New',monospace;font-size:.75rem;letter-spacing:.06em">
+          £ COSTO/100 km
+        </span>
+        <span id="costoPreview" style="font-size:1.1rem;font-weight:700;
+              font-family:'Courier New',monospace">–</span>
+      </div>
+
+      <button class="modal-btn modal-btn-primary" onclick="salvaImpostazioni()">▼ Salva e ricalcola tutti gli eventi</button>
+      <button class="modal-btn" style="background:var(--bgalt);color:var(--mid);margin-top:6px"
+              onclick="resetImpostazioni()">↺ Ripristina default</button>
+
+      <div style="font-size:.67rem;color:var(--faint);margin-top:10px;text-align:center">
+        Prezzi aggiornati al 30/03/2026 · Verifica su
+        <a href="https://carburanti.mise.gov.it" target="_blank" rel="noopener noreferrer"
+           style="color:var(--link)">mise.gov.it ↗</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     OVERLAY AGGIUNGI EVENTO LOCALE
+══════════════════════════════════════════════════════ -->
+<div class="overlay" id="overlayAggiungi" onclick="chiudiOverlay('overlayAggiungi')">
+  <div class="modal" style="max-height:90vh;overflow-y:auto" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <span class="modal-title">➕ Aggiungi evento locale</span>
+      <button class="modal-close" onclick="chiudiOverlay('overlayAggiungi')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.8rem;color:var(--mid);margin-bottom:14px">
+        Aggiungi sagre, eventi Arci, Pro Loco, feste di quartiere — tutto ciò che non appare online.
+        I dati restano <strong>solo sul tuo dispositivo</strong>, non vengono inviati a nessuno.
+      </p>
+
+      <div class="form-group">
+        <label>◙ Nome evento *</label>
+        <input class="form-input" id="ev_nome" type="text" placeholder="Es. Controautunno – Circolo Arci Pavia" maxlength="80">
+        <div class="form-error" id="err_nome">Inserisci il nome dell'evento</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>► Luogo *</label>
+          <input class="form-input" id="ev_luogo" type="text" placeholder="Es. Pavia, Viale Bligny 83" maxlength="60">
+          <div class="form-error" id="err_luogo">Inserisci il luogo</div>
+        </div>
+        <div class="form-group">
+          <label>↔ Distanza (km)</label>
+          <input class="form-input" id="ev_km" type="number" placeholder="0" min="0" max="500" value="0">
+          <div class="form-hint">0 = in loco</div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>◙ Data inizio *</label>
+          <input class="form-input" id="ev_dataInizio" type="date">
+          <div class="form-error" id="err_data">Inserisci la data</div>
+        </div>
+        <div class="form-group">
+          <label>◙ Data fine</label>
+          <input class="form-input" id="ev_dataFine" type="date">
+          <div class="form-hint">Lascia vuoto se evento singolo</div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>🏷 Categoria</label>
+          <select class="form-input" id="ev_cat">
+            <option value="Locale">🏘 Locale / Arci / Pro Loco</option>
+            <option value="Enogastronomia">🍷 Enogastronomia / Sagra</option>
+            <option value="Natura">🌳 Natura / Trekking</option>
+            <option value="Artistico">🎨 Arte / Musica</option>
+            <option value="Culturale">🏛 Culturale</option>
+            <option value="Scientifico">🔬 Scientifico</option>
+            <option value="Ludico">🎡 Ludico / Famiglia</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>£ Costo stimato (€)</label>
+          <input class="form-input" id="ev_costo" type="number" placeholder="0" min="0" value="0">
+          <div class="form-hint">0 = gratuito</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>≡ Descrizione breve</label>
+        <input class="form-input" id="ev_desc" type="text" placeholder="Es. Serata musicale, cena vegan, ingresso con tessera Arci" maxlength="140">
+      </div>
+
+      <div class="form-group">
+        <label>► Link (opzionale)</label>
+        <input class="form-input" id="ev_url" type="url" placeholder="https://… oppure lascia vuoto">
+        <div class="form-hint">Pagina Facebook, sito, post Instagram…</div>
+      </div>
+
+      <div class="form-group" style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="ev_aperto" style="width:16px;height:16px;cursor:pointer">
+        <label for="ev_aperto" style="font-size:.82rem;color:var(--mid);cursor:pointer;margin-bottom:0">🌿 Evento all'aperto</label>
+      </div>
+
+      <button class="modal-btn modal-btn-primary" onclick="salvaEventoLocale()">💾 Salva evento</button>
+
+      <!-- Lista eventi salvati -->
+      <div style="margin-top:20px;border-top:2px solid var(--border);padding-top:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <strong style="font-size:.82rem;color:var(--mid)">📋 I miei eventi salvati</strong>
+          <button onclick="cancellaEventiLocali()" style="background:none;border:none;cursor:pointer;font-size:.72rem;color:var(--faint)">🗑 Cancella tutti</button>
+        </div>
+        <ul class="saved-list" id="savedList"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ── SERVICE WORKER ─────────────────────────────────────────────
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{}));
+}
+
+// ── OFFLINE ────────────────────────────────────────────────────
+function aggiornaOffline(){document.getElementById('offlineBadge').classList.toggle('show',!navigator.onLine)}
+aggiornaOffline();
+window.addEventListener('online',aggiornaOffline);
+window.addEventListener('offline',aggiornaOffline);
+
+// ── TOAST ──────────────────────────────────────────────────────
+let toastT=null;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// ── OVERLAY ────────────────────────────────────────────────────
+function apriOverlay(id){document.getElementById(id).classList.add('show')}
+function chiudiOverlay(id){document.getElementById(id).classList.remove('show')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.overlay.show').forEach(o=>o.classList.remove('show'))});
+
+// ── TAB INSTALLAZIONE ──────────────────────────────────────────
+function switchTab(tab){
+  document.querySelectorAll('.modal-tab').forEach((t,i)=>{
+    const names=['android','ios','windows'];
+    t.classList.toggle('active',names[i]===tab);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+// ── INSTALLAZIONE PWA (nativa dove disponibile) ────────────────
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredPrompt=e;
+  document.getElementById('btnInstallAndroid').style.display='block';
+  document.getElementById('btnInstallWindows').style.display='block';
+});
+async function eseguiInstall(){
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  const{outcome}=await deferredPrompt.userChoice;
+  deferredPrompt=null;
+  if(outcome==='accepted'){chiudiOverlay('overlayInstall');showToast('✅ App installata!');}
+}
+// Auto-rileva piattaforma e apre il tab giusto
+function apriInstallConTab(){
+  const ua=navigator.userAgent;
+  if(/Android/i.test(ua))switchTab('android');
+  else if(/iP(hone|ad|od)/i.test(ua))switchTab('ios');
+  else switchTab('windows');
+  apriOverlay('overlayInstall');
+}
+document.querySelector('.pill-install').onclick=apriInstallConTab;
+
+// ── CONDIVISIONE ───────────────────────────────────────────────
+// ── RILEVAMENTO AMBIENTE ──────────────────────────────────────
+function isFileLocale(){
+  return window.location.protocol === 'file:';
+}
+function getLinkApp(){
+  // Recupera link personalizzato salvato dall'utente, oppure URL corrente
+  try {
+    const saved = localStorage.getItem('eventoExplorer_linkApp');
+    if(saved && saved.startsWith('http')) return saved;
+  } catch(e){}
+  return isFileLocale() ? null : window.location.href;
+}
+
+// ── HTML ISTRUZIONI PUBBLICAZIONE ─────────────────────────────
+function htmlIstruzioniPubblicazione(){
+  return `
+  <div style="background:#fff8ee;border:1.5px solid #e8d5a0;border-radius:10px;padding:13px 14px;margin-bottom:14px">
+    <div style="font-weight:700;color:#3a2a10;font-size:.88rem;margin-bottom:6px">⚠️ L'app è aperta da file locale</div>
+    <div style="font-size:.78rem;color:#5a4a30;line-height:1.6">
+      Per condividere un <strong>link funzionante</strong> con chiunque, devi prima pubblicare
+      i 5 file dell'app su internet. È gratuito e richiede 2 minuti.
+    </div>
+  </div>
+
+  <div style="margin-bottom:16px">
+    <div style="font-weight:700;font-size:.85rem;color:#1a4a8a;margin-bottom:10px">🚀 Opzione 1 – Netlify Drop (più facile, 30 secondi)</div>
+    <ol class="modal-steps">
+      <li>Vai su <a href="https://app.netlify.com/drop" target="_blank" rel="noopener noreferrer" style="color:var(--link);font-weight:600">app.netlify.com/drop ↗</a></li>
+      <li>Trascina la <strong>cartella</strong> con i 5 file (index.html, sw.js, manifest.json, icon-192.png, icon-512.png) nel riquadro della pagina</li>
+      <li>Netlify pubblica l'app in 10 secondi e ti dà un link tipo <em>https://nome-casuale.netlify.app</em></li>
+      <li>Copia quel link e incollalo qui sotto, oppure condividilo direttamente</li>
+    </ol>
+  </div>
+
+  <div style="margin-bottom:16px">
+    <div style="font-weight:700;font-size:.85rem;color:#1a4a2a;margin-bottom:10px">🐙 Opzione 2 – GitHub Pages (link fisso permanente)</div>
+    <ol class="modal-steps">
+      <li>Crea un account gratuito su <a href="https://github.com" target="_blank" rel="noopener noreferrer" style="color:var(--link)">github.com ↗</a></li>
+      <li>Crea un nuovo repository pubblico (es. <em>evento-explorer</em>)</li>
+      <li>Carica i 5 file nella root del repository</li>
+      <li>Vai su <strong>Settings → Pages → Branch: main → Save</strong></li>
+      <li>Il link sarà <em>https://tuonome.github.io/evento-explorer</em> — permanente e gratuito</li>
+    </ol>
+  </div>
+
+  <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+    <div style="font-size:.78rem;color:var(--mid);margin-bottom:8px">
+      📌 Hai già pubblicato l'app? Incolla qui il tuo link per salvarlo e usarlo per la condivisione:
+    </div>
+    <div style="display:flex;gap:7px">
+      <input id="inputLinkApp" type="url" placeholder="https://tuo-link.netlify.app"
+        style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:.78rem;color:var(--text);background:#fff;outline:none;font-family:inherit">
+      <button onclick="salvaLinkApp()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">💾 Salva</button>
+    </div>
+    <div id="linkAppSalvato" style="font-size:.7rem;color:#1a6a1a;margin-top:5px;display:none">✅ Link salvato! Ora il pulsante Condividi userà questo link.</div>
+  </div>`;
+}
+
+function salvaLinkApp(){
+  const val = (document.getElementById('inputLinkApp')||{}).value || '';
+  if(!val.startsWith('http')){
+    showToast('⚠️ Inserisci un link che inizia con https://');
+    return;
+  }
+  try { localStorage.setItem('eventoExplorer_linkApp', val); } catch(e){}
+  const info = document.getElementById('linkAppSalvato');
+  if(info){ info.style.display='block'; }
+  showToast('✅ Link salvato!');
+}
+
+// ── CONDIVISIONE PRINCIPALE ────────────────────────────────────
+function buildCondividiHTML(titolo, url, desc){
+  const linkApp = getLinkApp();
+  const urlDaUsare = url !== window.location.href ? url : (linkApp || url);
+  const eLocale = isFileLocale() && !linkApp;
+
+  if(eLocale){
+    // Siamo su file:// e non c'è ancora un link salvato
+    return htmlIstruzioniPubblicazione();
+  }
+
+  // Abbiamo un link valido
+  const urlSicuro = urlDaUsare.replace(/'/g,"%27");
+  const titoloSicuro = titolo.replace(/'/g,"\'");
+  return `
+    <p style="font-size:.82rem;color:var(--mid);margin-bottom:12px">${desc}</p>
+    <button class="modal-btn modal-btn-primary" style="margin-bottom:10px" onclick="eseguiCondividi('${titoloSicuro}','${urlSicuro}')">
+      📱 Condividi (WhatsApp · Telegram · email · …)
+    </button>
+    <div style="font-size:.74rem;color:var(--faint);text-align:center;margin-bottom:8px">oppure copia il link direttamente</div>
+    <div style="display:flex;gap:7px;align-items:center">
+      <input readonly id="linkDaCopiare" value="${urlDaUsare}"
+        style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:.73rem;color:var(--mid);background:var(--bg);cursor:text"
+        onclick="this.select()">
+      <button onclick="copiaLink('${urlSicuro}')"
+        style="background:#555;color:#fff;border:none;border-radius:8px;padding:8px 13px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">
+        📋 Copia
+      </button>
+    </div>
+    <ol class="modal-steps" style="margin-top:13px">
+      <li>Tocca <strong>"Condividi"</strong> per aprire il pannello nativo del tuo telefono e scegliere WhatsApp, Telegram, email o altro</li>
+      <li>Oppure tocca <strong>"Copia"</strong> e incolla il link dove preferisci</li>
+      <li>Chi riceve il link può aprirlo nel browser e <strong>installarlo come app</strong> sul proprio dispositivo</li>
+    </ol>
+    ${isFileLocale() && linkApp ? `<div style="font-size:.68rem;color:var(--faint);margin-top:8px;text-align:center">Link personalizzato salvato · <button onclick="localStorage.removeItem('eventoExplorer_linkApp');showToast('Link rimosso');chiudiOverlay('overlayCondividi')" style="background:none;border:none;cursor:pointer;color:var(--faint);font-size:.68rem;text-decoration:underline">Cambia</button></div>` : ''}`;
+}
+
+function apriCondividiApp(){
+  document.getElementById('condividiBody').innerHTML = buildCondividiHTML(
+    'Evento Explorer',
+    window.location.href,
+    'Condividi <strong>Evento Explorer</strong> – scopri eventi vicino a te, funziona offline, nessun tracciante.'
+  );
+  apriOverlay('overlayCondividi');
+}
+
+function apriCondividiEvento(nome, url){
+  document.getElementById('condividiBody').innerHTML = buildCondividiHTML(
+    nome, url,
+    `Condividi l'evento <strong>${nome}</strong>.`
+  );
+  apriOverlay('overlayCondividi');
+}
+
+async function eseguiCondividi(titolo,url){
+  if(navigator.share){
+    try{await navigator.share({title:titolo,url});chiudiOverlay('overlayCondividi');}
+    catch(e){if(e.name!=='AbortError')copiaLink(url);}
+  } else {copiaLink(url);}
+}
+
+function copiaLink(url){
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(url).then(()=>showToast('📋 Link copiato!')).catch(()=>copiaFallback(url));
+  } else {copiaFallback(url);}
+}
+function copiaFallback(url){
+  const el=document.createElement('textarea');el.value=url;
+  document.body.appendChild(el);el.select();
+  try{document.execCommand('copy');showToast('📋 Link copiato!');}catch(e){}
+  document.body.removeChild(el);
+}
+
+// ── INDICAZIONI ────────────────────────────────────────────────
+function apriIndicazioni(mappa){
+  const dest=encodeURIComponent(mappa);
+  const orig=encodeURIComponent(document.getElementById('partenzaInput').value.trim()||'Pavia,Italia');
+  window.open(`https://www.google.com/maps/dir/?api=1&origin=${orig}&destination=${dest}&travelmode=driving`,'_blank','noopener,noreferrer');
+}
+
+// ── MOTORI ─────────────────────────────────────────────────────
+function aggiornaLinkMotori(){
+  const città = document.getElementById('partenzaInput').value.trim() || 'Pavia';
+  const p = città + ' aprile 2026';
+  const pe = encodeURIComponent(p);
+  document.getElementById('linkTrovaEventi').href = `https://trovaeventi.com/cerca/?q=${pe}`;
+  document.getElementById('linkPlannify').href = `https://plannify.it/events?q=${pe}`;
+  // Aggiorna anche il pannello locale se è aperto
+  const span = document.getElementById('localeCity');
+  if(span) span.textContent = città;
+  if(document.getElementById('pannelloLocale').classList.contains('show')){
+    popolaFontiLocali(città);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PANNELLO EVENTI LOCALI — fonti specializzate
+// ══════════════════════════════════════════════════════════════
+
+let pannelloAperto = false;
+
+function togglePannelloLocale(){
+  pannelloAperto = !pannelloAperto;
+  const p = document.getElementById('pannelloLocale');
+  const b = document.getElementById('btnLocale');
+  p.classList.toggle('show', pannelloAperto);
+  b.classList.toggle('aperto', pannelloAperto);
+  if(pannelloAperto){
+    const città = document.getElementById('partenzaInput').value.trim() || 'Pavia';
+    document.getElementById('localeCity').textContent = città;
+    popolaFontiLocali(città);
+    setTimeout(()=>p.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+  }
+}
+
+// Rilevatore regione dalla città (euristico su 100+ comuni lombardi + vicini)
+function rilevaRegione(città){
+  const c = città.toLowerCase().trim();
+  const mappa = {
+    // Lombardia
+    lombardia: ['pavia','vigevano','voghera','mortara','abbiategrasso','lodi',
+      'cremona','mantova','brescia','bergamo','lecco','como','varese',
+      'monza','sesto','cologno','milan','milano','rho','magenta','legnano',
+      'busto','gallarate','castellanza','saronno','tradate','cantù',
+      'merate','desio','vimercate','carate','seregno','lissone',
+      'corsico','buccinasco','opera','segrate','pioltello','cernusco',
+      'paullo','melegnano','binasco','pieve','certosa','san donato',
+      'san giuliano','broni','stradella','mede','casalpusterlengo',
+      'crema','soncino','caravaggio','treviglio','romano','rivolta',
+      'codogno','casalmaggiore','soresina','oltrepò','varzi','casteggio'],
+    piemonte: ['torino','novara','alessandria','asti','cuneo','alba',
+      'bra','acqui','casale','vercelli','biella','verbania','domodossola',
+      'moncalieri','rivoli','collegno','settimo','chieri','pinerolo'],
+    veneto: ['venezia','verona','vicenza','padova','treviso','belluno',
+      'rovigo','legnago','este','montagnana','conselve','piove','camposampiero'],
+    emilia: ['bologna','parma','reggio','modena','ferrara','piacenza',
+      'ravenna','forlì','rimini','fidenza','salsomaggiore'],
+    liguria: ['genova','savona','imperia','la spezia','sanremo','albenga',
+      'chiavari','rapallo','sestri'],
+    toscana: ['firenze','lucca','pisa','siena','arezzo','grosseto','livorno',
+      'pistoia','prato','massa','carrara'],
+    trentino: ['trento','bolzano','rovereto','riva','arco','pergine'],
+  };
+  for(const [reg, città_list] of Object.entries(mappa)){
+    if(città_list.some(x => c.includes(x) || x.includes(c.split(' ')[0])))
+      return reg;
+  }
+  return 'italia'; // fallback nazionale
+}
+
+function makeLink(href, nome, desc, tag, tagClass){
+  return `<a class="fonte-btn" href="${href}" target="_blank" rel="noopener noreferrer">
+    <span class="fonte-nome">${nome}</span>
+    <span class="fonte-desc">${desc}</span>
+    <span class="fonte-tag ${tagClass}">${tag}</span>
+  </a>`;
+}
+
+function popolaFontiLocali(città){
+  const q  = encodeURIComponent(città);
+  const qs = encodeURIComponent(città + ' sagra 2026');
+  const qe = encodeURIComponent(città + ' evento aprile 2026');
+  const qp = encodeURIComponent(città + ' pro loco 2026');
+  const qa = encodeURIComponent(città + ' arci 2026');
+  const qm = encodeURIComponent(città + ' mercatino 2026');
+  const qf = encodeURIComponent(città + ' festa 2026');
+  const reg = rilevaRegione(città);
+
+  // ── Fonti territoriali (variano per regione) ───────────────
+  let fontiTerritoriali = [];
+
+  if(reg === 'lombardia'){
+    fontiTerritoriali = [
+      makeLink(`https://eventi.regione.lombardia.it/it/?search=${q}`,
+        '▣ REG. LOMBARDIA','Calendario ufficiale regionale','Regione','tag-comune'),
+      makeLink(`https://www.in-lombardia.it/it/sagre-e-feste?search=${q}`,
+        '♦ IN-LOMBARDIA','Sagre, feste e fiere lombarde','Sagre','tag-sagre'),
+      makeLink(`https://www.quatarobpavia.it/eventi-mercatini-sagre-pavia-provincia/`,
+        '► QUATAROB PAVIA','Sagre e mercatini pavesi','Pavia','tag-locale'),
+      makeLink(`https://www.visitlombardia.it/it/eventi?q=${q}`,
+        '◙ VISIT LOMBARDIA','Portale turistico ufficiale','Turismo','tag-comune'),
+      makeLink(`https://www.cheventi.it/regioni/lombardia/?s=${q}`,
+        '◄► CHEVENTI','Selezione eventi Lombardia','Weekend','tag-locale'),
+      makeLink(`https://www.arcipavia.it/calendar/`,
+        '♠ ARCI PAVIA','Calendario circoli Arci Pavia','Arci','tag-arci'),
+    ];
+  } else if(reg === 'piemonte'){
+    fontiTerritoriali = [
+      makeLink(`https://www.regione.piemonte.it/web/temi/cultura-turismo-sport/turismo/eventi-piemonte?q=${q}`,
+        '▣ REG. PIEMONTE','Calendario ufficiale regionale','Regione','tag-comune'),
+      makeLink(`https://www.sagre.it/regione/piemonte/?s=${q}`,
+        '♦ SAGRE.IT','Sagre e feste in Piemonte','Sagre','tag-sagre'),
+      makeLink(`https://www.visitpiemonte.com/it/eventi?q=${q}`,
+        '◙ VISIT PIEMONTE','Portale turistico ufficiale','Turismo','tag-comune'),
+    ];
+  } else if(reg === 'veneto'){
+    fontiTerritoriali = [
+      makeLink(`https://www.veneto.eu/it/veneto/eventi?q=${q}`,
+        '▣ REG. VENETO','Calendario ufficiale regionale','Regione','tag-comune'),
+      makeLink(`https://www.sagre.it/regione/veneto/?s=${q}`,
+        '♦ SAGRE.IT','Sagre e feste in Veneto','Sagre','tag-sagre'),
+      makeLink(`https://www.visitveneto.info/eventi?q=${q}`,
+        '◙ VISIT VENETO','Portale turistico','Turismo','tag-comune'),
+    ];
+  } else if(reg === 'emilia'){
+    fontiTerritoriali = [
+      makeLink(`https://www.emiliaromagnaturismo.it/it/eventi?q=${q}`,
+        '▣ ER TURISMO','Emilia Romagna Turismo','Regione','tag-comune'),
+      makeLink(`https://www.sagre.it/regione/emilia-romagna/?s=${q}`,
+        '♦ SAGRE.IT','Sagre e feste in Emilia','Sagre','tag-sagre'),
+    ];
+  } else if(reg === 'trentino'){
+    fontiTerritoriali = [
+      makeLink(`https://www.visittrentino.info/it/esperienze/eventi?q=${q}`,
+        '▣ VISIT TRENTINO','Portale ufficiale Trentino','Regione','tag-comune'),
+      makeLink(`https://www.altoadige.info/eventi?q=${q}`,
+        '◙ ALTO ADIGE INFO','Eventi Alto Adige','Turismo','tag-comune'),
+    ];
+  } else {
+    // Fallback: cerca su sagre.it e Google
+    fontiTerritoriali = [
+      makeLink(`https://www.sagre.it/cerca/?q=${q}`,
+        '♦ SAGRE.IT','Sagre e feste locali in Italia','Sagre','tag-sagre'),
+    ];
+  }
+
+  // Aggiungi sempre Google Maps + Ricerca Comune
+  fontiTerritoriali.push(
+    makeLink(`https://www.google.com/maps/search/eventi+${q}+oggi/@/data=!3m1!4b1`,
+      '◎ GOOGLE MAPS','Cerca eventi nei dintorni sulla mappa','Mappa','tag-locale'),
+    makeLink(`https://www.comune.${città.toLowerCase().replace(/\s+/g,'-')}.it/eventi`,
+      '► COMUNE','Sito istituzionale del comune','Comune','tag-comune'),
+    makeLink(`https://www.facebook.com/search/events/?q=${q}+eventi`,
+      '◙ FACEBOOK','Cerca eventi pubblici locali su Facebook','Social','tag-locale')
+  );
+
+  // ── Fonti nazionali sempre presenti ───────────────────────
+  const fontiNaz = [
+    makeLink(`https://www.sagre.it/cerca/?q=${qs.replace(/%20/g,'+')}`,
+      '♦ SAGRE.IT','La più completa per sagre italiane','Sagre','tag-sagre'),
+    makeLink(`https://www.proloco.it/cerca/?q=${q}`,
+      '► PRO LOCO IT','Portale nazionale Pro Loco','Pro Loco','tag-locale'),
+    makeLink(`https://www.comune-info.net/?s=${q}+eventi`,
+      '▣ COMUNI IT','Notizie dai comuni italiani','Comuni','tag-comune'),
+    makeLink(`https://www.ilvolo.info/eventi/?city=${q}`,
+      '◄► ILVOLO.INFO','Mercatini e feste locali','Mercatini','tag-sagre'),
+    makeLink(`https://portale.arci.it/events/?city=${q}`,
+      '♠ ARCI NAZIONALE','Circoli Arci in tutta Italia','Arci','tag-arci'),
+    makeLink(`https://www.weekendearte.it/cerca/?q=${qe}`,
+      '◙ WEEKEND ARTE','Arte e cultura il weekend','Cultura','tag-locale'),
+    makeLink(`https://www.google.it/search?q=${encodeURIComponent('sagre '+città+' 2026')}`,
+      '■ GOOGLE SAGRE','Ricerca Google mirata su sagre','Google','tag-locale'),
+    makeLink(`https://www.google.it/search?q=${encodeURIComponent('eventi '+città+' aprile 2026 pro loco')}`,
+      '■ GOOGLE PRO LOCO','Pro Loco ed eventi gratuiti','Google','tag-locale'),
+    makeLink(`https://www.google.it/search?q=${encodeURIComponent('circolo arci '+città+' 2026 programma')}`,
+      '■ GOOGLE ARCI','Circoli Arci e programma','Google','tag-arci'),
+    makeLink(`https://www.google.it/search?q=${encodeURIComponent('mercatino '+città+' 2026')}`,
+      '■ GOOGLE MERCATINI','Mercatini e fiere locali','Google','tag-sagre'),
+  ];
+
+  document.getElementById('fontiGrid').innerHTML = fontiTerritoriali.join('');
+  document.getElementById('fontiNazionali').innerHTML = fontiNaz.join('');
+}
+
+
+// ══════════════════════════════════════════════════════════════
+//  DATI EVENTI
+// ══════════════════════════════════════════════════════════════
+const EVENTS=[
+  {id:1,emoji:"🔬",cat:"Scientifico",
+   nome:"Pavia Innovation Week 2026",
+   luogo:"Pavia – Teatro Fraschini e piazze storiche",paese:"IT",
+   distKm:5,autostr:0,data:"8–11 apr 2026",aperto:true,
+   costoEv:"Gratuito",costoN:0,
+   url:"https://www.comune.pavia.it/vivere-comune/eventi/pavia-innovation-week-2026-dall8-all11-aprile-pavia-diventa-laboratorio-futuro",
+   mappa:"Teatro Fraschini Pavia",
+   desc:"40+ eventi gratuiti con 80 ospiti internazionali (Hinton, Gianotti, astronauti). Scienza, AI e cultura in piazze e collegi storici.",
+   tags:["sci","cult"],cammino:null},
+
+  {id:2,emoji:"🌸",cat:"Botanico",
+   nome:"Springmania – Villaggio dei Fiori",
+   luogo:"San Martino Siccomario (PV)",paese:"IT",
+   distKm:8,autostr:0,data:"18–19 apr, 25–26 apr 2026",aperto:true,
+   costoEv:"15 € online / 19 € cassa",costoN:15,
+   url:"https://www.puravidafarm.it",
+   mappa:"PuraVida Farm Via Piemonte San Martino Siccomario",
+   desc:"35.000 mq di parco con 100.000+ fiori, alberi secolari, fattoria con animali, laboratori creativi e area pic-nic.",
+   tags:["bot","lud","nat"],cammino:null},
+
+  {id:3,emoji:"🔭",cat:"Scientifico",
+   nome:"Food & Science Festival – Mantova",
+   luogo:"Mantova – Piazza Sordello",paese:"IT",
+   distKm:65,autostr:0,data:"15–17 mag 2026",aperto:true,
+   costoEv:"Gratuito (alcuni a pagamento)",costoN:0,
+   url:"https://www.foodandsciencefestival.com",
+   mappa:"Piazza Sordello Mantova",
+   desc:"10ª edizione. Genetica, AI, alimentazione e clima in Piazza Sordello. Installazioni e conferenze all'aperto nel centro rinascimentale.",
+   tags:["sci","eno","art"],cammino:null},
+
+  {id:4,emoji:"🧀",cat:"Enogastronomia",
+   nome:"Langhe in Fiore – Barolo e Barbaresco",
+   luogo:"Alba (CN)",paese:"IT",
+   distKm:140,autostr:7,data:"Aprile 2026 – vari weekend",aperto:true,
+   costoEv:"Gratuito / degustazioni a pagamento",costoN:0,
+   url:"https://www.visitlmr.it/it/cosa-fare/eventi",
+   mappa:"Piazza Risorgimento Alba Cuneo",
+   desc:"Colline Langhe in fioritura: cantine aperte, piazze come banchi d'assaggio, show cooking e percorsi tra Barolo e Barbaresco.",
+   tags:["eno","cult","nat"],cammino:null},
+
+  {id:5,emoji:"🌷",cat:"Botanico",
+   nome:"Parco Sigurtà – Tulipanomania 2026",
+   luogo:"Valeggio sul Mincio (VR)",paese:"IT",
+   distKm:148,autostr:7.5,data:"Mar–mag 2026 · 18 apr Sabato d'Artista",aperto:true,
+   costoEv:"18 € adulti / 10 € ragazzi 5–14",costoN:18,
+   url:"https://www.sigurta.it/eventi-parco/festival-di-tulipanomania-2026",
+   mappa:"Parco Giardino Sigurtà Valeggio sul Mincio",
+   desc:"1.000.000+ tulipani in 60 ettari. Premio Miglior Festival Tulipani al Mondo. Giorni festivi: prenotazione online obbligatoria.",
+   tags:["bot","nat","lud"],cammino:null},
+
+  {id:6,emoji:"🍷",cat:"Enogastronomia",
+   nome:"Vinitaly and the City – Verona",
+   luogo:"Verona – centro storico",paese:"IT",
+   distKm:160,autostr:8,data:"10–12 apr 2026",aperto:true,
+   costoEv:"18 € online (entro 9 apr) / 22 € cassa",costoN:18,
+   url:"https://www.veronasera.it/eventi/vinitaly-and-the-city-festa-10-12-aprile-2026.html",
+   mappa:"Piazza dei Signori Verona",
+   desc:"~70 eventi nel cuore di Verona: Piazza dei Signori, Cortile del Tribunale e Cortile Mercato Vecchio. Degustazioni, masterclass e visite guidate.",
+   tags:["eno","cult"],cammino:null},
+
+  {id:7,emoji:"🍷",cat:"Enogastronomia",
+   nome:"Vinitaly 2026 – Fiera Internazionale del Vino",
+   luogo:"Verona – Veronafiere",paese:"IT",
+   distKm:160,autostr:8,data:"12–15 apr 2026",aperto:false,
+   costoEv:"125 € intero / 55 € AIS",costoN:55,
+   url:"https://www.vinitaly.com/it/vinitaly/",
+   mappa:"Veronafiere Viale del Lavoro Verona",
+   desc:"58ª edizione. 4.000+ espositori, OperaWine, Bacco AI. Riservata agli operatori del settore vitivinicolo.",
+   tags:["eno"],cammino:null},
+
+  {id:8,emoji:"🏔",cat:"Natura",
+   nome:"Trekking Cinque Terre – Sentiero Azzurro",
+   luogo:"Cinque Terre (La Spezia)",paese:"IT",
+   distKm:200,autostr:14,data:"Tutto aprile",aperto:true,
+   costoEv:"7,50 € Cinque Terre Card",costoN:8,
+   url:"https://www.parconazionale5terre.it/it/escursioni/sentiero-azzurro/",
+   mappa:"Riomaggiore La Spezia",
+   desc:"Primavera: meno folla e fiori ovunque. Completo 13 km (Riomaggiore–Monterosso) o breve Corniglia–Vernazza 4 km. Card obbligatoria.",
+   tags:["nat","cult"],cammino:{livello:"Medio",km:13,ore:"5–6 h"}},
+
+  {id:9,emoji:"🍇",cat:"Enogastronomia",
+   nome:"Festival Nosiola e Vino Santo – Trentino",
+   luogo:"Valle dei Laghi (TN)",paese:"IT",
+   distKm:235,autostr:14,data:"Aprile 2026",aperto:true,
+   costoEv:"Gratuito / ~10 €",costoN:10,
+   url:"https://www.gardatrentino.it/it/localita/valle-dei-laghi/eventi",
+   mappa:"Sarche Calavino Trento",
+   desc:"Vitigno bianco autoctono del Trentino. Trekking tra vigneti terrazzati, rito della spremitura. Sullo sfondo il Lago di Toblino.",
+   tags:["eno","nat","bot"],cammino:{livello:"Facile",km:8,ore:"3 h"}},
+
+  {id:10,emoji:"🏛",cat:"Artistico",
+   nome:"Biennale Architettura – Venezia",
+   luogo:"Venezia – Giardini e Arsenale",paese:"IT",
+   distKm:270,autostr:18,data:"10 apr – 23 nov 2026",aperto:false,
+   costoEv:"25 € intero / 22 € ridotto",costoN:25,
+   url:"https://www.labiennale.org/it/architettura/2026",
+   mappa:"Giardini della Biennale Venezia",
+   desc:"Padiglioni nazionali ai Giardini, installazioni all'Arsenale. Uno degli eventi architettonici più importanti al mondo.",
+   tags:["art","cult","sci"],cammino:null},
+
+  {id:11,emoji:"🌼",cat:"Botanico",
+   nome:"Masi in Fiore – Alto Adige",
+   luogo:"Val Venosta / Merano (BZ)",paese:"IT",
+   distKm:295,autostr:19,data:"18–26 apr 2026",aperto:true,
+   costoEv:"Gratuito",costoN:0,
+   url:"https://www.suedtirol.info/it/esperienze/eventi/masi-in-fiore",
+   mappa:"Merano Bolzano",
+   desc:"Meleti in fioritura nella Val Venosta. Mercato Sapori del Maso (18 apr) e Festa dei Masi in Fiore (26 apr) con gastronomia altoatesina.",
+   tags:["bot","eno","nat"],cammino:null},
+
+  {id:12,emoji:"🚶",cat:"Natura",
+   nome:"Via Francigena – da Pavia verso l'Appennino",
+   luogo:"Oltrepò Pavese → Appennino",paese:"IT",
+   distKm:0,autostr:0,data:"Tutto aprile (autonomo)",aperto:true,
+   costoEv:"Gratuito (alloggi ~25–40 €/notte)",costoN:0,
+   url:"https://www.viefrancigene.org/it/route/it/",
+   mappa:"Via Francigena Pavia",
+   desc:"La Via Francigena storica parte da Pavia. In aprile campagna in fiore, borghi medievali e abbazie. Estendibile verso Pontremoli.",
+   tags:["nat","cult","stor"],cammino:{livello:"Media/Lunga",km:180,ore:"più giorni"}},
+];
+
+const TAG_LABEL={sci:"🔬 Sci",eno:"🍷 Eno",bot:"🌿 Bot",art:"🎨 Art",cult:"🏛 Cult",nat:"🌳 Nat",lud:"🎡 Lud",stor:"📜 Stor"};
+const TAG_COLOR={sci:"#1a4a8a",eno:"#7a2020",bot:"#2a6520",art:"#5a2a80",cult:"#2a508a",nat:"#1a6060",lud:"#7a5000",stor:"#5a3a10"};
+const DIFF={Facile:"#1a7a30",Medio:"#b06000","Media/Lunga":"#8a2020"};
+// Carburante/consumo personalizzabili (con fallback ai valori default)
+let DIESEL = 2.054, CONSUMO = 18; // default: diesel self media MIMIT 30/03/2026
+(function caricaImpostazioni(){
+  try {
+    const d = parseFloat(localStorage.getItem('eventoExplorer_diesel'));
+    const c = parseFloat(localStorage.getItem('eventoExplorer_consumo'));
+    const t = localStorage.getItem('eventoExplorer_tipo');
+    if(d > 0 && d < 10)  DIESEL = d;
+    if(c > 0 && c < 100) CONSUMO = c;
+    if(t) try{tipoCarburanteCorrente=t;}catch(e){}
+  } catch(e){}
+})();
+const DEFAULTS={cat:"Tutti",aperto:false,sort:"distanza",q:"",view:"auto",raggio:200};
+let state={...DEFAULTS,expanded:null};
+
+// ── UTILITÀ ────────────────────────────────────────────────────
+function calcC(ev){
+  const ar=ev.distKm*2,carb=ev.distKm?+((ar/CONSUMO)*DIESEL).toFixed(2):0,aut=+(ev.autostr*2).toFixed(2);
+  return{ar,carb,aut,tot:+(carb+aut+ev.costoN).toFixed(2)};
+}
+function bi(tot){return tot===0?0:tot<20?1:tot<50?2:3}
+function bl(tot){return tot===0?"Gratis 🎉":"~"+Math.round(tot)+" €"}
+function tempo(km){if(!km)return"In loco";const h=km/90;return h<1?"~"+Math.round(h*60)+" min":"~"+h.toFixed(1).replace(".",",")+" h"}
+function tagsH(tags){return tags.map(t=>`<span class="tag" style="background:${TAG_COLOR[t]||'#888'}">${TAG_LABEL[t]||t}</span>`).join("")}
+
+// ── TITOLO ─────────────────────────────────────────────────────
+function aggiornaTitolo(){
+  const p=document.getElementById("partenzaInput").value.trim();
+  document.getElementById("titoloH1").innerHTML=
+    `Cosa fare entro <span id="raggioTitolo">${state.raggio}</span> km${p?` da <strong>${p}</strong>`:""}`;
+}
+
+// ── SLIDER ─────────────────────────────────────────────────────
+function aggiornaSlider(v){
+  const pct=(v/200*100).toFixed(1);
+  document.getElementById("raggioSlider").style.setProperty("--pct",pct+"%");
+  document.getElementById("raggioVal").textContent=v===0?"0 km (solo in loco)":v+" km";
+}
+
+// ── FILTRO ─────────────────────────────────────────────────────
+function getFiltered(){
+  let ev=state.raggio===0?EVENTS.filter(e=>e.distKm===0):EVENTS.filter(e=>e.distKm<=state.raggio);
+  const cat=state.cat;
+  if(cat!=="Tutti")ev=ev.filter(e=>e.cat.toLowerCase().includes(cat.toLowerCase())||e.tags.some(t=>(TAG_LABEL[t]||"").toLowerCase().includes(cat.toLowerCase())));
+  if(state.aperto)ev=ev.filter(e=>e.aperto);
+  const q=state.q.trim().toLowerCase();
+  if(q)ev=ev.filter(e=>e.nome.toLowerCase().includes(q)||e.luogo.toLowerCase().includes(q)||e.desc.toLowerCase().includes(q));
+  ev.sort((a,b)=>state.sort==="costo"?calcC(a).tot-calcC(b).tot:a.distKm-b.distKm);
+  return ev;
+}
+
+// ── RENDER ─────────────────────────────────────────────────────
+function render(){
+  const evs=getFiltered();
+  document.getElementById("evCount").textContent=evs.length+" eventi";
+  aggiornaTitolo();
+  const p=document.getElementById("partenzaInput").value.trim()||"punto di partenza";
+  const dove=state.raggio===0?"in loco":"entro "+state.raggio+" km da "+p;
+  document.getElementById("subCount").textContent=evs.length+" proposte "+dove+" · ordinate per distanza";
+  aggiornaLinkMotori();
+  const useCard=state.view==="card"||(state.view==="auto"&&window.innerWidth<720);
+  const c=document.getElementById("evList");c.innerHTML="";
+  if(useCard){evs.forEach(ev=>c.appendChild(mkCard(ev)));}
+  else{
+    const w=document.createElement("div");w.className="table-wrap";
+    const t=document.createElement("table");
+    t.innerHTML=`<thead><tr>${["Evento","◙ Data","↔ Km","◄► Tempo","▣ Benz.","═══ Aut.","Biglietto","£ Tot.","♦",""].map(h=>`<th>${h}</th>`).join("")}</tr></thead>`;
+    const tb=document.createElement("tbody");
+    evs.forEach((ev,i)=>{
+      tb.appendChild(mkRow(ev,i));
+      const xr=mkExpRow(ev);xr.style.display=state.expanded===ev.id?"":"none";xr.id="exp-"+ev.id;
+      tb.appendChild(xr);
+    });
+    t.appendChild(tb);w.appendChild(t);c.appendChild(w);
+  }
+}
+
+// ── CARD ───────────────────────────────────────────────────────
+function mkCard(ev){
+  const c=calcC(ev),i=bi(c.tot),l=bl(c.tot),open=state.expanded===ev.id;
+  const d=document.createElement("div");d.className="ev-card";
+  d.innerHTML=`
+  <div class="card-head" onclick="toggleExp(${ev.id})">
+    <span class="card-emoji">${ev.emoji}</span>
+    <div class="card-info">
+      <div class="card-title">${ev.nome}</div>
+      <div class="card-luogo">► ${ev.luogo}</div>
+      <div class="card-data">◙ ${ev.data}</div>
+      <div class="tags">${tagsH(ev.tags)}${ev.aperto?'<span class="tag tag-aperto">♦ Aperto</span>':""}</div>
+    </div>
+    <div class="card-meta">
+      <span class="badge badge-${i}">${l}</span>
+      <span class="card-tempo">${tempo(ev.distKm)}</span>
+      <span class="card-chevron">${open?"▲":"▼"}</span>
+    </div>
+  </div>
+  <div class="card-detail${open?" open":""}" id="card-det-${ev.id}">${detHtml(ev,c)}</div>`;
+  return d;
+}
+
+function detHtml(ev,c){
+  const i=bi(c.tot),l=bl(c.tot),fg=["#1a6a1a","#4a7a10","#8a5000","#8a2020"][i];
+  const m=ev.mappa.replace(/'/g,"\\'"),n=ev.nome.replace(/'/g,"\\'");
+  return`<div class="card-desc">${ev.desc}</div>
+  <div class="detail-box"><div class="detail-title">Dettaglio Costi</div>
+    ${[["↔ Distanza A/R",ev.distKm?c.ar+" km":"In loco"],["◄► Tempo guida",tempo(ev.distKm)],["▣ Carburante A/R",ev.distKm?c.carb.toFixed(2)+" €":"—"],["══ Autostrada A/R",c.aut?c.aut.toFixed(2)+" €":"—"],["♠ Biglietto",ev.costoEv]].map(([k,v])=>`<div class="detail-row"><span class="dk">${k}</span><span class="dv">${v}</span></div>`).join("")}
+    <div class="detail-total"><span class="tk">Totale stimato</span><span class="tv" style="color:${fg}">${l}</span></div>
+    <div class="detail-note">*Esclusi parcheggio, pasti, alloggio</div>
+  </div>
+  ${ev.cammino?`<div class="cammino-box"><div class="exp-label" style="color:#1a6a1a;margin-bottom:4px">▲ Escursione</div><div style="display:flex;gap:14px;font-size:.79rem;flex-wrap:wrap"><span style="color:${DIFF[ev.cammino.livello]||"#555"};font-weight:700">${ev.cammino.livello}</span><span>↔ ${ev.cammino.km} km</span><span>◄► ${ev.cammino.ore}</span></div></div>`:""}
+  <div class="ev-actions">
+    <a class="ev-btn ev-btn-sito" href="${ev.url}" target="_blank" rel="noopener noreferrer">🔗 Sito</a>
+    <button class="ev-btn ev-btn-mappa" onclick="apriIndicazioni('${m}')">🧭 Indicazioni</button>
+
+  </div>`;
+}
+
+// ── RIGA TABELLA ───────────────────────────────────────────────
+function mkRow(ev,idx){
+  const c=calcC(ev),i=bi(c.tot),l=bl(c.tot),open=state.expanded===ev.id;
+  const tr=document.createElement("tr");tr.className=idx%2===0?"even":"odd";tr.onclick=()=>toggleExp(ev.id);
+  tr.innerHTML=`<td><div style="display:flex;gap:6px;align-items:flex-start"><span>${ev.emoji}</span><div>
+    <div class="td-nome"><a href="${ev.url}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${ev.nome}</a></div>
+    <div class="td-sub">📍 ${ev.luogo}</div><div class="td-tags">${tagsH(ev.tags)}</div></div></div></td>
+    <td class="td-data">${ev.data}</td>
+    <td class="td-num td-km">${ev.distKm?c.ar+" km":"—"}</td>
+    <td class="td-tempo">${tempo(ev.distKm)}</td>
+    <td class="td-num td-carb">${ev.distKm?c.carb.toFixed(2)+" €":"—"}</td>
+    <td class="td-num td-aut">${c.aut?c.aut.toFixed(2)+" €":"—"}</td>
+    <td style="font-size:.72rem">${ev.costoEv}</td>
+    <td><span class="badge badge-${i}" style="font-size:.73rem">${l}</span></td>
+    <td class="td-center">${ev.aperto?'<span style="color:#1a7a30">♦</span>':'<span style="color:#ccc">◘</span>'}</td>
+    <td class="td-chevron">${open?"▲":"▼"}</td>`;
+  return tr;
+}
+
+function mkExpRow(ev){
+  const c=calcC(ev),i=bi(c.tot),l=bl(c.tot),fg=["#1a6a1a","#4a7a10","#8a5000","#8a2020"][i];
+  const m=ev.mappa.replace(/'/g,"\\'"),n=ev.nome.replace(/'/g,"\\'");
+  const tr=document.createElement("tr");tr.className="exp-row";
+  const td=document.createElement("td");td.colSpan=10;
+  td.innerHTML=`<div class="exp-inner"><div class="exp-grid">
+    <div><div class="exp-label">Descrizione</div>
+      <div style="font-size:.79rem;color:var(--mid);line-height:1.6">${ev.desc}</div>
+      ${ev.cammino?`<div style="margin-top:7px;background:#f0faf0;border:1px solid #b8ddb8;border-radius:7px;padding:7px 10px;font-size:.77rem"><span style="color:${DIFF[ev.cammino.livello]||"#555"};font-weight:700">${ev.cammino.livello}</span> · ${ev.cammino.km} km · ◄► ${ev.cammino.ore}</div>`:""}
+      <div class="ev-actions" style="margin-top:8px">
+        <a class="ev-btn ev-btn-sito" href="${ev.url}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="font-size:.71rem;padding:6px 11px">🔗 Sito</a>
+        <button class="ev-btn ev-btn-mappa" onclick="apriIndicazioni('${m}');event.stopPropagation()" style="font-size:.71rem;padding:6px 11px">🧭 Indicazioni</button>
+
+      </div>
+    </div>
+    <div><div class="exp-label">Costi (1 persona)</div>
+      ${[["▣ Carb. A/R",ev.distKm?c.carb.toFixed(2)+" €":"—"],["══ Autostrada A/R",c.aut?c.aut.toFixed(2)+" €":"—"],["♠ Biglietto",ev.costoEv],["◄► Tempo",tempo(ev.distKm)]].map(([k,v])=>`<div class="detail-row"><span class="dk">${k}</span><span class="dv">${v}</span></div>`).join("")}
+      <div style="margin-top:5px;font-weight:700;color:${fg}">${l}</div>
+    </div>
+    <div><div class="exp-label">Dove</div>
+      <div style="font-size:.79rem;color:var(--mid)">${ev.luogo}</div>
+      <div style="font-size:.72rem;color:var(--faint);margin-top:2px">${ev.paese==="IT"?"🇮🇹 Italia":"🇸🇮 Slovenia"}</div>
+    </div>
+  </div></div>`;
+  tr.appendChild(td);return tr;
+}
+
+function toggleExp(id){
+  state.expanded=state.expanded===id?null:id;render();
+  setTimeout(()=>{const el=document.getElementById("card-det-"+id)||document.getElementById("exp-"+id);if(el&&state.expanded===id)el.scrollIntoView({behavior:"smooth",block:"nearest"});},50);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PULSANTE AVVIA RICERCA
+// ══════════════════════════════════════════════════════════════
+const avviaBtn=document.getElementById("avviaBtn");
+let timerVerde=null;
+function setStato(pronto){
+  avviaBtn.classList.toggle("pronto",pronto);
+  avviaBtn.textContent=pronto?"✅ Risultati aggiornati":"🔍 Avvia ricerca";
+}
+function segnalaCambio(){clearTimeout(timerVerde);setStato(false);}
+
+avviaBtn.addEventListener("click",()=>{
+  state.expanded=null;render();
+  setStato(true);clearTimeout(timerVerde);
+  timerVerde=setTimeout(()=>setStato(false),3500);
+});
+
+// ══════════════════════════════════════════════════════════════
+//  CAMPO PARTENZA – ricerca funzionante
+//  Il campo è SOLO descrittivo (nome sul titolo e motori).
+//  Le distanze sono fisse nei dati. "Pavia" non filtra per nome.
+//  Il raggio filtra per distanza km dal dataset.
+// ══════════════════════════════════════════════════════════════
+const partenzaEl=document.getElementById("partenzaInput");
+const clearEl=document.getElementById("clearPartenza");
+const hintEl=document.getElementById("partenzaHint");
+
+partenzaEl.addEventListener("input",function(){
+  const v=this.value;
+  clearEl.classList.toggle("show",v.length>0);
+  // Salva partenza in localStorage per ritrovarla alla prossima apertura
+  try { localStorage.setItem('eventoExplorer_partenza', v); } catch(e){}
+  aggiornaTitolo();
+  aggiornaLinkMotori();
+  render();
+  segnalaCambio();
+});
+
+clearEl.addEventListener("click",()=>{
+  partenzaEl.value="";
+  clearEl.classList.remove("show");
+  try { localStorage.removeItem('eventoExplorer_partenza'); } catch(e){}
+  aggiornaTitolo();aggiornaLinkMotori();render();segnalaCambio();
+});
+
+// ── SLIDER ─────────────────────────────────────────────────────
+document.getElementById("raggioSlider").addEventListener("input",function(){
+  state.raggio=+this.value;aggiornaSlider(state.raggio);state.expanded=null;
+  render();segnalaCambio();
+});
+document.getElementById("raggioSlider").addEventListener("change",function(){
+  render();setStato(true);clearTimeout(timerVerde);timerVerde=setTimeout(()=>setStato(false),3500);
+});
+
+// ── CATEGORIA ──────────────────────────────────────────────────
+document.getElementById("catButtons").addEventListener("click",e=>{
+  const btn=e.target.closest(".cat-btn");if(!btn)return;
+  document.querySelectorAll(".cat-btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");
+  state.cat=btn.dataset.cat;state.expanded=null;render();
+  setStato(true);clearTimeout(timerVerde);timerVerde=setTimeout(()=>setStato(false),3500);
+});
+
+// ── APERTO ─────────────────────────────────────────────────────
+document.getElementById("apertoBtn").addEventListener("click",function(){
+  state.aperto=!state.aperto;this.classList.toggle("active",state.aperto);
+  state.expanded=null;render();
+  setStato(true);clearTimeout(timerVerde);timerVerde=setTimeout(()=>setStato(false),3500);
+});
+
+// ── SORT ───────────────────────────────────────────────────────
+document.getElementById("sortSel").addEventListener("change",function(){
+  state.sort=this.value;state.expanded=null;render();
+  setStato(true);clearTimeout(timerVerde);timerVerde=setTimeout(()=>setStato(false),3500);
+});
+
+// ── CERCA TESTO ────────────────────────────────────────────────
+document.getElementById("searchInput").addEventListener("input",function(){
+  state.q=this.value;state.expanded=null;render();segnalaCambio();
+});
+document.getElementById("searchInput").addEventListener("change",function(){
+  render();setStato(true);clearTimeout(timerVerde);timerVerde=setTimeout(()=>setStato(false),3500);
+});
+
+// ── VISTA ──────────────────────────────────────────────────────
+document.querySelectorAll(".view-btn").forEach(btn=>btn.addEventListener("click",function(){
+  document.querySelectorAll(".view-btn").forEach(b=>b.classList.remove("active"));this.classList.add("active");
+  state.view=this.dataset.view;state.expanded=null;render();
+}));
+
+let resizeT;window.addEventListener("resize",()=>{clearTimeout(resizeT);resizeT=setTimeout(render,200);});
+
+
+// ══════════════════════════════════════════════════════════════
+//  IMPOSTAZIONI CARBURANTE
+// ══════════════════════════════════════════════════════════════
+// Prezzi carburante aggiornati al 30/03/2026 (MIMIT self-service media nazionale)
+const PREZZI_DEFAULT = {
+  benzina: { prezzo: 1.748, consumo: 14,  label: 'Benzina', ico: '◙'  },
+  diesel:  { prezzo: 2.054, consumo: 18,  label: 'Diesel',  ico: '▣'  },
+  gpl:     { prezzo: 0.681, consumo: 10,  label: 'GPL',     ico: '◄►' },
+  metano:  { prezzo: 1.567, consumo: 25,  label: 'Metano',  ico: '■'  },
+  ibrida:  { prezzo: 1.748, consumo: 22,  label: 'Ibrida',  ico: '◙◄' },
+  elettrica:{ prezzo: 0.30, consumo: 6,   label: 'Elettrica',ico:'■■' },
+};
+let tipoCarburanteCorrente = 'diesel'; // default
+
+function aggiornaLabelDiesel(){
+  const d = DIESEL.toFixed(2).replace('.',',');
+  const c = CONSUMO % 1 === 0 ? CONSUMO : CONSUMO.toFixed(1);
+  const tipo = PREZZI_DEFAULT[tipoCarburanteCorrente] || PREZZI_DEFAULT.diesel;
+  const el = document.getElementById('dieselValLabel');
+  if(el) el.textContent = tipo.ico+' '+tipo.label+' · '+d+' €/L · '+c+' km/L';
+}
+
+function aggiornaCostoPreview(){
+  const d = parseFloat((document.getElementById('imp_diesel')||{}).value) || DIESEL;
+  const c = parseFloat((document.getElementById('imp_consumo')||{}).value) || CONSUMO;
+  const costo = (100/c*d).toFixed(2);
+  const el = document.getElementById('costoPreview');
+  if(el) el.textContent = '~'+costo+' €';
+}
+
+function selezionaTipoCarb(btn){
+  // Deseleziona tutti
+  document.querySelectorAll('.tipo-carb-btn').forEach(b=>b.classList.remove('selezionato'));
+  btn.classList.add('selezionato');
+  tipoCarburanteCorrente = btn.dataset.tipo;
+  const p = parseFloat(btn.dataset.prezzo);
+  const c = parseFloat(btn.dataset.consumo);
+  const di = document.getElementById('imp_diesel');
+  const co = document.getElementById('imp_consumo');
+  if(di) di.value = p.toFixed(3);
+  if(co) co.value = c;
+  aggiornaCostoPreview();
+  // Salva preferenza tipo
+  try { localStorage.setItem('eventoExplorer_tipo', tipoCarburanteCorrente); } catch(e){}
+}
+
+// Aggiorna prezzi live da QuiFinanza (scraping non possibile per CORS;
+// usiamo i valori MIMIT aggiornati al 30/03/2026 come dati embedded)
+function aggiornaPrezziLive(){
+  const btn = document.getElementById('btnAggiornaPrezzi');
+  const status = document.getElementById('prezziStatus');
+  if(btn) btn.textContent = '◙ Carico…';
+  // Dati MIMIT 30/03/2026 — aggiornati manualmente
+  // Benzina: 1.748 | Diesel: 2.054 | GPL: 0.681 | Metano: 1.567
+  const prezziOggi = {benzina:1.748,diesel:2.054,gpl:0.681,metano:1.567,ibrida:1.748,elettrica:0.30};
+  Object.entries(prezziOggi).forEach(([tipo,p])=>{
+    PREZZI_DEFAULT[tipo].prezzo = p;
+    const el = document.getElementById('pr_'+tipo);
+    if(el){
+      const u = tipo==='metano'?'€/kg':tipo==='elettrica'?'€/kWh':'€/L';
+      el.textContent = p.toFixed(3).replace('.',',')+' '+u;
+    }
+    const btn2 = document.querySelector(`.tipo-carb-btn[data-tipo="${tipo}"]`);
+    if(btn2) btn2.dataset.prezzo = p;
+  });
+  if(status) status.textContent = '✔ Prezzi al 30/03/2026 (MIMIT self-service media nazionale)';
+  if(btn){ btn.textContent = '◄► Aggiorna'; }
+  // Se il tipo attivo è selezionato, aggiorna i campi
+  const attivo = document.querySelector('.tipo-carb-btn.selezionato');
+  if(attivo) selezionaTipoCarb(attivo);
+  showToast('✔ Prezzi aggiornati al 30/03/2026');
+}
+
+// Apertura modal: ripristina stato
+document.getElementById('overlayImpostazioni').addEventListener('click', function(){
+  // Ripristina tipo salvato
+  try {
+    const t = localStorage.getItem('eventoExplorer_tipo');
+    if(t && PREZZI_DEFAULT[t]) tipoCarburanteCorrente = t;
+  } catch(e){}
+  // Seleziona il pulsante tipo corrente
+  const btn = document.querySelector(`.tipo-carb-btn[data-tipo="${tipoCarburanteCorrente}"]`);
+  if(btn) btn.classList.add('selezionato');
+  // Riempie i campi manuali
+  const di = document.getElementById('imp_diesel');
+  const co = document.getElementById('imp_consumo');
+  if(di && !di.value) di.value = DIESEL.toFixed(3);
+  if(co && !co.value) co.value = CONSUMO;
+  aggiornaCostoPreview();
+  // Prezzi label
+  const status = document.getElementById('prezziStatus');
+  if(status && !status.textContent) status.textContent = 'Prezzi incorporati al 30/03/2026';
+}, {once: false});
+
+['imp_diesel','imp_consumo'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) el.addEventListener('input', aggiornaCostoPreview);
+});
+
+function salvaImpostazioni(){
+  const d = parseFloat((document.getElementById('imp_diesel')||{}).value) || PREZZI_DEFAULT[tipoCarburanteCorrente].prezzo;
+  const c = parseFloat((document.getElementById('imp_consumo')||{}).value) || PREZZI_DEFAULT[tipoCarburanteCorrente].consumo;
+  if(isNaN(d)||d<=0||d>10){showToast('⚠️ Prezzo non valido');return;}
+  if(isNaN(c)||c<=0||c>100){showToast('⚠️ Consumo non valido');return;}
+  DIESEL = d; CONSUMO = c;
+  try {
+    localStorage.setItem('eventoExplorer_diesel', d);
+    localStorage.setItem('eventoExplorer_consumo', c);
+    localStorage.setItem('eventoExplorer_tipo', tipoCarburanteCorrente);
+  } catch(e){}
+  aggiornaLabelDiesel();
+  chiudiOverlay('overlayImpostazioni');
+  render();
+  showToast('✅ Costi ricalcolati · '+PREZZI_DEFAULT[tipoCarburanteCorrente].label);
+}
+
+function resetImpostazioni(){
+  tipoCarburanteCorrente = 'diesel';
+  DIESEL = 2.054; CONSUMO = 18;
+  try {
+    localStorage.removeItem('eventoExplorer_diesel');
+    localStorage.removeItem('eventoExplorer_consumo');
+    localStorage.removeItem('eventoExplorer_tipo');
+  } catch(e){}
+  document.querySelectorAll('.tipo-carb-btn').forEach(b=>b.classList.remove('selezionato'));
+  const btn = document.querySelector('.tipo-carb-btn[data-tipo="diesel"]');
+  if(btn) btn.classList.add('selezionato');
+  const di = document.getElementById('imp_diesel');
+  const co = document.getElementById('imp_consumo');
+  if(di) di.value = '2.054';
+  if(co) co.value = '18';
+  aggiornaCostoPreview();
+  aggiornaLabelDiesel();
+  render();
+  showToast('↺ Ripristinato: Diesel 2,054 €/L');
+}
+
+// ── AVVIO ──────────────────────────────────────────────────────
+// Ripristina partenza dall'ultima sessione
+(function(){
+  try {
+    const p = localStorage.getItem('eventoExplorer_partenza');
+    if(p){
+      const el = document.getElementById('partenzaInput');
+      el.value = p;
+      document.getElementById('clearPartenza').classList.add('show');
+    }
+  } catch(e){}
+})();
+aggiornaSlider(200);
+aggiornaLabelDiesel();
+render();
+setStato(true);
+timerVerde=setTimeout(()=>setStato(false),3500);
+
+// ══════════════════════════════════════════════════════════════
+//  FILTRI TEMPORALI
+//  Oggi       = data inizio evento coincide con oggi
+//  Entro 1 mese = data inizio entro i prossimi 30 giorni
+//  Oltre 1 mese = data inizio oltre 30 giorni da oggi
+//  La logica usa ev.dataIso (YYYY-MM-DD) aggiunto ai dati
+// ══════════════════════════════════════════════════════════════
+
+// Date ISO aggiunte ai dati fissi (aprile 2026)
+const DATA_ISO_MAP = {
+  1:  "2026-04-08",  // Pavia Innovation Week
+  2:  "2026-04-18",  // Springmania
+  3:  "2026-05-15",  // Food & Science Mantova
+  4:  "2026-04-01",  // Langhe
+  5:  "2026-03-15",  // Sigurtà (in corso)
+  6:  "2026-04-10",  // Vinitaly and the City
+  7:  "2026-04-12",  // Vinitaly fiera
+  8:  "2026-04-01",  // Cinque Terre (tutto aprile)
+  9:  "2026-04-01",  // Nosiola
+  10: "2026-04-10",  // Biennale
+  11: "2026-04-18",  // Masi in Fiore
+  12: "2026-04-01",  // Via Francigena
+};
+EVENTS.forEach(ev=>{ ev.dataIso = DATA_ISO_MAP[ev.id] || null; });
+
+let filtroTempo = null; // null | "oggi" | "mese" | "oltre"
+
+document.getElementById("tempoFiltri").addEventListener("click", e => {
+  const btn = e.target.closest(".tempo-btn");
+  if(!btn) return;
+  const t = btn.dataset.tempo;
+  if(filtroTempo === t){
+    // secondo click = toglie il filtro
+    filtroTempo = null;
+    document.querySelectorAll(".tempo-btn").forEach(b => b.classList.remove("active"));
+  } else {
+    filtroTempo = t;
+    document.querySelectorAll(".tempo-btn").forEach(b => b.classList.toggle("active", b.dataset.tempo === t));
+  }
+  state.expanded = null;
+  render();
+  setStato(true); clearTimeout(timerVerde); timerVerde = setTimeout(()=>setStato(false), 3500);
+});
+
+// Patcha getFiltered per includere filtro temporale
+const _getFilteredOrig = getFiltered;
+// eslint-disable-next-line no-global-assign
+getFiltered = function(){
+  let ev = _getFilteredOrig();
+  if(!filtroTempo) return ev;
+
+  const oggi = new Date(); oggi.setHours(0,0,0,0);
+  const tra30 = new Date(oggi); tra30.setDate(tra30.getDate()+30);
+
+  return ev.filter(e => {
+    if(!e.dataIso) return true; // se non ha data ISO lo mostriamo sempre
+    const d = new Date(e.dataIso); d.setHours(0,0,0,0);
+    if(filtroTempo === "oggi")  return d.getTime() === oggi.getTime();
+    if(filtroTempo === "mese")  return d >= oggi && d <= tra30;
+    if(filtroTempo === "oltre") return d > tra30;
+    return true;
+  });
+};
+
+// ══════════════════════════════════════════════════════════════
+//  EVENTI LOCALI – localStorage
+// ══════════════════════════════════════════════════════════════
+const LS_KEY = "eventoExplorer_locali_v1";
+let nextLocalId = 1000;
+
+function caricaEventiLocali(){
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch(e){ return []; }
+}
+
+function salvaEventiLocali(lista){
+  try { localStorage.setItem(LS_KEY, JSON.stringify(lista)); } catch(e){}
+}
+
+function eventiLocaliToEvents(lista){
+  return lista.map(e => ({
+    id: e.id,
+    emoji: "📌",
+    cat: e.cat || "Locale",
+    nome: e.nome,
+    luogo: e.luogo,
+    paese: "IT",
+    distKm: +e.km || 0,
+    autostr: 0,
+    data: e.dataLabel,
+    dataIso: e.dataInizio || null,
+    aperto: e.aperto || false,
+    costoEv: e.costo > 0 ? "~"+e.costo+" €" : "Gratuito",
+    costoN: +e.costo || 0,
+    url: e.url || "#",
+    mappa: e.luogo,
+    desc: e.desc || "Evento locale aggiunto manualmente.",
+    tags: ["lud"],
+    cammino: null,
+    isLocale: true
+  }));
+}
+
+function aggiornaSavedList(){
+  const lista = caricaEventiLocali();
+  const ul = document.getElementById("savedList");
+  if(!ul) return;
+  if(lista.length === 0){
+    ul.innerHTML = '<li class="no-saved">Nessun evento salvato</li>';
+    return;
+  }
+  ul.innerHTML = lista.map(e => `
+    <li class="saved-item">
+      <div>
+        <div class="saved-nome">📌 ${e.nome}</div>
+        <div class="saved-data">► ${e.luogo} · ◙ ${e.dataLabel}</div>
+      </div>
+      <button class="saved-del" onclick="eliminaEventoLocale(${e.id})" title="Elimina">🗑</button>
+    </li>`).join("");
+}
+
+function eliminaEventoLocale(id){
+  const lista = caricaEventiLocali().filter(e => e.id !== id);
+  salvaEventiLocali(lista);
+  aggiornaSavedList();
+  render();
+  showToast("🗑 Evento rimosso");
+}
+
+function cancellaEventiLocali(){
+  if(!confirm("Eliminare tutti i tuoi eventi salvati?")) return;
+  salvaEventiLocali([]);
+  aggiornaSavedList();
+  render();
+  showToast("🗑 Tutti gli eventi locali rimossi");
+}
+
+function salvaEventoLocale(){
+  const nome  = document.getElementById("ev_nome").value.trim();
+  const luogo = document.getElementById("ev_luogo").value.trim();
+  const di    = document.getElementById("ev_dataInizio").value;
+  let ok = true;
+
+  // Validazione
+  document.getElementById("err_nome").classList.toggle("show", !nome);
+  document.getElementById("err_luogo").classList.toggle("show", !luogo);
+  document.getElementById("err_data").classList.toggle("show", !di);
+  if(!nome || !luogo || !di) return;
+
+  const df = document.getElementById("ev_dataFine").value;
+  const fmtData = d => { if(!d) return ""; const [y,m,g]=d.split("-"); return g+"/"+m+"/"+y; };
+  const dataLabel = df ? fmtData(di)+" – "+fmtData(df) : fmtData(di);
+
+  const lista = caricaEventiLocali();
+  const maxId = lista.reduce((m,e)=>Math.max(m,e.id),999);
+  const ev = {
+    id:        maxId + 1,
+    nome,
+    luogo,
+    km:        +document.getElementById("ev_km").value || 0,
+    dataInizio: di,
+    dataLabel,
+    cat:       document.getElementById("ev_cat").value,
+    costo:     +document.getElementById("ev_costo").value || 0,
+    desc:      document.getElementById("ev_desc").value.trim(),
+    url:       document.getElementById("ev_url").value.trim(),
+    aperto:    document.getElementById("ev_aperto").checked,
+  };
+
+  lista.push(ev);
+  salvaEventiLocali(lista);
+  aggiornaSavedList();
+  render();
+  showToast("✅ Evento \""+nome+"\" salvato!");
+
+  // Reset form
+  ["ev_nome","ev_luogo","ev_km","ev_dataInizio","ev_dataFine","ev_costo","ev_desc","ev_url"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el.type==="number") el.value=id==="ev_km"||id==="ev_costo"?"0":"";
+    else el.value="";
+  });
+  document.getElementById("ev_aperto").checked = false;
+  document.getElementById("ev_cat").selectedIndex = 0;
+}
+
+// Patcha getFiltered per includere anche gli eventi locali
+const _getFilteredBase = getFiltered;
+// eslint-disable-next-line no-global-assign
+getFiltered = function(){
+  const fissi = _getFilteredBase();
+  const locali = eventiLocaliToEvents(caricaEventiLocali());
+
+  // applica gli stessi filtri anche ai locali
+  let loc = state.raggio === 0
+    ? locali.filter(e => e.distKm === 0)
+    : locali.filter(e => e.distKm <= state.raggio);
+
+  if(state.aperto) loc = loc.filter(e => e.aperto);
+  const q = state.q.trim().toLowerCase();
+  if(q) loc = loc.filter(e => e.nome.toLowerCase().includes(q) || e.luogo.toLowerCase().includes(q) || e.desc.toLowerCase().includes(q));
+
+  // filtro temporale
+  if(filtroTempo){
+    const oggi = new Date(); oggi.setHours(0,0,0,0);
+    const tra30 = new Date(oggi); tra30.setDate(tra30.getDate()+30);
+    loc = loc.filter(e => {
+      if(!e.dataIso) return true;
+      const d = new Date(e.dataIso); d.setHours(0,0,0,0);
+      if(filtroTempo==="oggi")  return d.getTime()===oggi.getTime();
+      if(filtroTempo==="mese")  return d>=oggi && d<=tra30;
+      if(filtroTempo==="oltre") return d>tra30;
+      return true;
+    });
+  }
+
+  const tutti = [...fissi, ...loc];
+  tutti.sort((a,b) => state.sort==="costo" ? calcC(a).tot-calcC(b).tot : a.distKm-b.distKm);
+  return tutti;
+};
+
+// Evidenzia visivamente le card degli eventi locali
+const _mkCardOrig = mkCard;
+mkCard = function(ev){
+  const card = _mkCardOrig(ev);
+  if(ev.isLocale){
+    card.classList.add("locale");
+    const titleEl = card.querySelector(".card-title");
+    if(titleEl) titleEl.innerHTML += ' <span class="locale-badge">📌 Tuo evento</span>';
+  }
+  return card;
+};
+
+// Aggiorna lista salvati ogni volta che si apre il modal
+document.getElementById("overlayAggiungi").addEventListener("click", aggiornaSavedList, {once:false});
+const _apriOverlayOrig = apriOverlay;
+apriOverlay = function(id){
+  _apriOverlayOrig(id);
+  if(id === "overlayAggiungi") aggiornaSavedList();
+};
+
+// Init: carica eventi locali salvati
+aggiornaSavedList();
+</script>
+</body>
+</html>
