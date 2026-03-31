@@ -1,0 +1,29 @@
+function geocodifica(citta, cb) {
+  var n = norm(citta);
+  if(!n) { cb(null); return; }
+  // 1. Match esatto
+  if(CC[n]) { cb(CC[n]); return; }
+  // 2. La chiave INIZIA con il testo (minimo 4 chars)
+  if(n.length >= 4) {
+    var ks = Object.keys(CC);
+    for(var i=0;i<ks.length;i++) {
+      if(ks[i].indexOf(n)===0) { cb(CC[ks[i]]); return; }
+    }
+  }
+  // 3. Prima parola (minimo 4 chars)
+  var prima = n.split(" ")[0];
+  if(prima.length >= 4) {
+    var ks2 = Object.keys(CC);
+    for(var j=0;j<ks2.length;j++) {
+      if(ks2[j].indexOf(prima)===0) { cb(CC[ks2[j]]); return; }
+    }
+  }
+  // 🔥 4. NUOVO: Ricerca "contains" - il testo OVUNQUE nella chiave
+  if(n.length >= 3) {
+    var ks3 = Object.keys(CC);
+    for(var k=0;k<ks3.length;k++) {
+      if(ks3[k].indexOf(n) !== -1) { cb(CC[ks3[k]]); return; }
+    }
+  }
+  cb(null);
+}
